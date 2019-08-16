@@ -1,9 +1,7 @@
 import time
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.io
-
 from bandpass_filter import BandPassFilter
+from fft_filter import FFTFilter
+
 
 class MotionProcessor:
 
@@ -42,51 +40,6 @@ class MotionProcessor:
             self.w.append(w - self.base_w)
             self.h.append(h - self.base_h)
 
-    def filter(self, x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm):
-        start_index = 0
-        end_index = x_frequency.size -1
-        low_pulse_bps = None
-        high_pulse_bps = None
-        if low_pulse_bpm is not None :
-            low_pulse_bps = low_pulse_bpm/60
-        if high_pulse_bpm is not None :
-            high_pulse_bps = high_pulse_bpm/60
-
-        for index in range(x_frequency.size):
-            if low_pulse_bps is not None and x_frequency[index] > low_pulse_bps and start_index == 0:
-                start_index = index
-            if high_pulse_bps is not None and x_frequency[index] > high_pulse_bps :
-                end_index = index
-                break
-        return x_frequency[start_index:end_index], y_frequency[start_index:end_index]
-
-    def fft_filter_series(self, series, fps, dimension, low_pulse_bpm = None, high_pulse_bpm = None):
-        ts = 1.0 / fps  # sampling interval
-
-        videoLength = len(series) * ts
-        x_time = np.arange(0, videoLength, ts)  # time vector
-        x_time = x_time[range(len(series))]
-
-        y_time = np.array(series)
-
-        # persist to file for post processing
-        scipy.io.savemat('Pulse_time series_' +dimension, {
-            'x': x_time,
-            'y': y_time
-        })
-
-        number_of_samples = len(y_time)  # length of the signal
-        k = np.arange(number_of_samples)
-        T = number_of_samples / fps
-        x_frequency = k / T  # two sides frequency range
-        x_frequency = x_frequency[range(int(number_of_samples / 2))]  # one side frequency range
-
-        y_frequency = np.fft.fft(y_time) / number_of_samples  # fft computing and normalization
-        y_frequency = abs(y_frequency[range(int(number_of_samples / 2))])
-
-        x_frequency, y_frequency  = self.filter(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm);
-        return x_time, y_time, x_frequency, y_frequency
-
     def fft_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
         if dimension == 'X':
             series = self.x
@@ -96,11 +49,13 @@ class MotionProcessor:
             series = self.w
         else:
             series = self.h
+        fft_filter = FFTFilter()
+        return fft_filter.fft_filter(series, fps, dimension, low_pulse_bpm, high_pulse_bpm)
 
-        x_time, y_time, x_frequency, y_frequency = self.fft_filter_series( series, fps, dimension)
-
-        x_frequency, y_frequency  = self.filter(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm);
-        return x_time, y_time, x_frequency, y_frequency
+    @staticmethod
+    def fft_filter_series(series, fps, dimension, low_pulse_bpm, high_pulse_bpm):
+        fft_filter = FFTFilter()
+        return fft_filter.fft_filter(series, fps, dimension, low_pulse_bpm, high_pulse_bpm)
 
     def time_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
         band_pass_filter = BandPassFilter()
@@ -113,8 +68,9 @@ class MotionProcessor:
         else:
             series = self.h
 
-        return band_pass_filter.time_filter( series, fps, low_pulse_bpm, high_pulse_bpm)
+        return band_pass_filter.time_filter(series, fps, low_pulse_bpm, high_pulse_bpm)
 
-    def time_filter_series(self, series, fps, low_pulse_bpm, high_pulse_bpm):
+    @staticmethod
+    def time_filter_series(series, fps, low_pulse_bpm, high_pulse_bpm):
         band_pass_filter = BandPassFilter()
-        return band_pass_filter.time_filter( series, fps, low_pulse_bpm, high_pulse_bpm)
+        return band_pass_filter.time_filter(series, fps, low_pulse_bpm, high_pulse_bpm)
