@@ -1,0 +1,54 @@
+from scipy.signal import butter, lfilter, freqz
+import scipy.io
+import numpy as np
+
+
+class BandPassFilter:
+    def __init__(self):
+        print("BandPassFilter:__init__")
+
+    def butter_bandpass(self,lowcut, highcut, fs, order=5):
+        nyq = 0.5 * fs
+        low = lowcut / nyq
+        high = highcut / nyq
+        b, a = butter(order, [low, high], btype='band')
+        return b, a
+
+
+    def butter_bandpass_filter(self, data, lowcut, highcut, fs, order=5):
+        b, a = self.butter_bandpass(lowcut, highcut, fs, order=order)
+        y = lfilter(b, a, data)
+        return y
+
+
+    def time_filter(self, y_amplitude, fps, low_pulse_bpm=None, high_pulse_bpm=None):
+
+        if low_pulse_bpm is None:
+            low_pulse_bps = 0;
+        else:
+            low_pulse_bps = low_pulse_bpm/60
+
+        if high_pulse_bpm is None:
+            high_pulse_bps = 10000;
+        else:
+            high_pulse_bps = high_pulse_bpm/60
+
+
+        sample_interval = 1.0 / fps  # sampling interval
+
+        videoLength = len(y_amplitude) * sample_interval
+        x_time = np.arange(0, videoLength, sample_interval)  # time vector
+        x_time = x_time[range(len(y_amplitude))]
+
+
+        y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude, low_pulse_bps, high_pulse_bps, fps, order=6)
+
+        #find peaks
+        peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.5, threshold=None)
+
+        time_intervals = np.average(np.diff(peaks_positive))
+        per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
+
+        beats_per_minute = 1/per_beat_in_seconds *60
+        return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
+

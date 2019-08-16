@@ -3,11 +3,11 @@ import numpy as np
 # Learn about API authentication here: https://plot.ly/python/getting-started
 # Find your api_key here: https://plot.ly/settings/api
 
-Fs = 150.0;  # sampling rate
+Fs = 12.0;  # sampling rate
 Ts = 1.0/Fs; # sampling interval
-t = np.arange(0,1,Ts) # time vector
+t = np.arange(0,8,Ts) # time vector
 
-ff = 5;   # frequency of the signal
+ff = .9;   # frequency of the signal
 y = np.sin(2*np.pi*ff*t)
 
 n = len(y) # length of the signal

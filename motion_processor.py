@@ -3,9 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io
 
-#cut off rate for pulse rate
-LOW_PULSE = 30/60
-HIGH_PULSE = 300/60
+from bandpass_filter import BandPassFilter
 
 class MotionProcessor:
 
@@ -44,19 +42,52 @@ class MotionProcessor:
             self.w.append(w - self.base_w)
             self.h.append(h - self.base_h)
 
-    def filter(self, x_frequency, y_frequency):
+    def filter(self, x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm):
         start_index = 0
         end_index = x_frequency.size -1
+        low_pulse_bps = None
+        high_pulse_bps = None
+        if low_pulse_bpm is not None :
+            low_pulse_bps = low_pulse_bpm/60
+        if high_pulse_bpm is not None :
+            high_pulse_bps = high_pulse_bpm/60
+
         for index in range(x_frequency.size):
-            if x_frequency[index] > LOW_PULSE and start_index == 0:
+            if low_pulse_bps is not None and x_frequency[index] > low_pulse_bps and start_index == 0:
                 start_index = index
-            if x_frequency[index] > HIGH_PULSE :
+            if high_pulse_bps is not None and x_frequency[index] > high_pulse_bps :
                 end_index = index
                 break
         return x_frequency[start_index:end_index], y_frequency[start_index:end_index]
 
-    def fft_filter_motion(self, dimension, fps):
+    def fft_filter_series(self, series, fps, dimension, low_pulse_bpm = None, high_pulse_bpm = None):
         ts = 1.0 / fps  # sampling interval
+
+        videoLength = len(series) * ts
+        x_time = np.arange(0, videoLength, ts)  # time vector
+        x_time = x_time[range(len(series))]
+
+        y_time = np.array(series)
+
+        # persist to file for post processing
+        scipy.io.savemat('Pulse_time series_' +dimension, {
+            'x': x_time,
+            'y': y_time
+        })
+
+        number_of_samples = len(y_time)  # length of the signal
+        k = np.arange(number_of_samples)
+        T = number_of_samples / fps
+        x_frequency = k / T  # two sides frequency range
+        x_frequency = x_frequency[range(int(number_of_samples / 2))]  # one side frequency range
+
+        y_frequency = np.fft.fft(y_time) / number_of_samples  # fft computing and normalization
+        y_frequency = abs(y_frequency[range(int(number_of_samples / 2))])
+
+        x_frequency, y_frequency  = self.filter(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm);
+        return x_time, y_time, x_frequency, y_frequency
+
+    def fft_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
         if dimension == 'X':
             series = self.x
         elif dimension == 'Y':
@@ -66,35 +97,24 @@ class MotionProcessor:
         else:
             series = self.h
 
-        videoLength = len(series) * ts
-        t = np.arange(0, videoLength, ts)  # time vector
-        t = t[range(len(series))]
+        x_time, y_time, x_frequency, y_frequency = self.fft_filter_series( series, fps, dimension)
 
-        y_time_series = np.array(series)
+        x_frequency, y_frequency  = self.filter(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm);
+        return x_time, y_time, x_frequency, y_frequency
 
-        # persist to file for post processing
-        scipy.io.savemat('Pulse_' +dimension, {
-            'x': t,
-            'y': y_time_series
-        })
-        # test_set = scipy.io.loadmat('Pulse_' +dimension)
-        # test_set_x = test_set['x']
-        # test_set_y = test_set['y']
+    def time_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
+        band_pass_filter = BandPassFilter()
+        if dimension == 'X':
+            series = self.x
+        elif dimension == 'Y':
+            series = self.y
+        elif dimension == 'W':
+            series = self.w
+        else:
+            series = self.h
 
-        n = len(y_time_series)  # length of the signal
-        k = np.arange(n)
-        T = n / fps
-        x_frequency = k / T  # two sides frequency range
-        x_frequency = x_frequency[range(int(n / 2))]  # one side frequency range
+        return band_pass_filter.time_filter( series, fps, low_pulse_bpm, high_pulse_bpm)
 
-        y_frequency = np.fft.fft(y_time_series) / n  # fft computing and normalization
-        y_frequency = abs(y_frequency[range(int(n / 2))])
-
-        x_frequency, y_frequency  = self.filter(x_frequency, y_frequency);
-        fig, ax = plt.subplots(2, 1)
-        ax[0].plot(t, y_time_series)
-        ax[0].set_xlabel('Time')
-        ax[0].set_ylabel('Amplitude ' + dimension)
-        ax[1].bar(x_frequency *60, y_frequency, color=(1.0, 0.0, 0.0), width=1.0 )  # plotting the spectrum in BPM
-        ax[1].set_xlabel('Pulse (BMP)')
-        ax[1].set_ylabel('|Y(BMP)| ' + dimension)
+    def time_filter_series(self, series, fps, low_pulse_bpm, high_pulse_bpm):
+        band_pass_filter = BandPassFilter()
+        return band_pass_filter.time_filter( series, fps, low_pulse_bpm, high_pulse_bpm)

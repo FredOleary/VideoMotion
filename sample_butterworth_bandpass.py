@@ -22,8 +22,8 @@ def run():
 
     # Sample rate and desired cutoff frequencies (in Hz).
     fs = 12.0 # assuming 30 fps
-    lowcut = 60.0/60    #60bpm
-    highcut = 100/60    #100bpm
+    lowcut = 30.0/60    #60bpm
+    highcut = 200/60    #100bpm
 
     # Plot the frequency response for a few different orders.
     plt.figure(1)
@@ -41,7 +41,7 @@ def run():
     plt.legend(loc='best')
 
     #Load sample signal
-    data_set = scipy.io.loadmat('Pulse_X')
+    data_set = scipy.io.loadmat('Pulse_time series_X')
     t = data_set['x'][0]
     x = data_set['y'][0]
 
