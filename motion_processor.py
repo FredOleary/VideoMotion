@@ -40,6 +40,16 @@ class MotionProcessor:
             self.w.append(w - self.base_w)
             self.h.append(h - self.base_h)
 
+    def add_no_motion(self):
+        try:
+            if self.base_x is not None:
+                self.x.append(0)
+                self.y.append(0)
+                self.w.append(0)
+                self.h.append(0)
+                
+        except IndexError:
+            print("foo")
     def fft_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
         if dimension == 'X':
             series = self.x
