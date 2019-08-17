@@ -41,13 +41,16 @@ class FFTFilter:
         })
 
         number_of_samples = len(y_time)  # length of the signal
-        k = np.arange(number_of_samples)
-#        T = number_of_samples / fps
-        x_frequency = k / video_length  # two sides frequency range
-        x_frequency = x_frequency[range(int(number_of_samples / 2))]  # one side frequency range
+        if number_of_samples > 0:
+            k = np.arange(number_of_samples)
+            x_frequency = k / video_length  # two sides frequency range
+            x_frequency = x_frequency[range(int(number_of_samples / 2))]  # one side frequency range
 
-        y_frequency = np.fft.fft(y_time) / number_of_samples  # fft computing and normalization
-        y_frequency = abs(y_frequency[range(int(number_of_samples / 2))])
+            y_frequency = np.fft.fft(y_time) / number_of_samples  # fft computing and normalization
+            y_frequency = abs(y_frequency[range(int(number_of_samples / 2))])
 
-        x_frequency, y_frequency = self.filter_harmonics(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm)
-        return x_time, y_time, x_frequency, y_frequency
+            x_frequency, y_frequency = self.filter_harmonics(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm)
+            return x_time, y_time, x_frequency, y_frequency
+        else:
+            # return empty arrays
+            return np.array(series), np.array(series), np.array(series), np.array(series)

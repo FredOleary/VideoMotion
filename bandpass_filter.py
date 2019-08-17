@@ -37,14 +37,17 @@ class BandPassFilter:
         x_time = np.arange(0, video_length, sample_interval)  # time vector
         x_time = x_time[range(len(y_amplitude))]
 
-        y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude, low_pulse_bps, high_pulse_bps, fps, order=6)
+        if len(x_time > 0):
+            y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude, low_pulse_bps, high_pulse_bps, fps, order=6)
 
-        # find peaks
-        peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.5, threshold=None)
+            # find peaks
+            peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.5, threshold=None)
 
-        time_intervals = np.average(np.diff(peaks_positive))
-        per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
+            time_intervals = np.average(np.diff(peaks_positive))
+            per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
 
-        beats_per_minute = 1/per_beat_in_seconds * 60
-        return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
-
+            beats_per_minute = 1/per_beat_in_seconds * 60
+            return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
+        else:
+            # return empy arrays.
+            return 0, x_time, x_time, x_time, x_time

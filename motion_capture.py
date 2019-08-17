@@ -38,7 +38,28 @@ class MotionCapture:
         ax[1].plot(x_time[peaks_positive], y_amplitude_filtered[peaks_positive], 'ro', ms=3, label='positive peaks',
                    color=(0.0, 0.0, 1.0))
         ax[1].set_xlabel('Pulse (BMP) ' + str(round(beats_per_minute, 2)))
-        ax[1].set_ylabel('Amplitude - filtered ' + 'X')
+        ax[1].set_ylabel('Amplitude - filtered ' + dimension)
+
+    @staticmethod
+    def show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency, y_frequency, dimension):
+        fig, ax = plt.subplots(3, 1)
+        if len(x_time) > 0:
+            fig.suptitle(dimension + " Dimension BPM " + str(round(beats_per_minute, 2)), fontsize=14)
+            ax[0].plot(x_time, y_amplitude)
+            ax[0].set_xlabel('Time')
+            ax[0].set_ylabel('Amplitude - Unfiltered')
+
+            ax[1].plot(x_time,  y_amplitude_filtered, color=(1.0, 0.0, 0.0))
+            ax[1].plot(x_time[peaks_positive], y_amplitude_filtered[peaks_positive], 'ro', ms=3, label='positive peaks',
+                       color=(0.0, 0.0, 1.0))
+            ax[1].set_ylabel('Amplitude - filtered')
+
+            chart_bar_width = (x_frequency[len(x_frequency)-1]/(len(x_frequency)*2))*60
+            ax[2].bar(x_frequency * 60, y_frequency, color=(1.0, 0.0, 0.0), width=chart_bar_width)
+            ax[2].set_xlabel('Pulse (BMP)')
+            ax[2].set_ylabel('|Y(BMP)|')
+        else:
+            fig.suptitle(dimension + " Dimension - No data available", fontsize=14)
 
     def test_filters(self):
         mp = MotionProcessor()
@@ -109,32 +130,29 @@ class MotionCapture:
         # When everything done, release the video capture object
         cap.release()
 
-        x_time, y_time,  x_frequency, y_frequency = mp.fft_filter_motion('X', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'X')
-
-        x_time, y_time,  x_frequency, y_frequency = mp.fft_filter_motion('Y', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'Y')
-
-        x_time, y_time,  x_frequency, y_frequency = mp.fft_filter_motion('W', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'W')
-
-        x_time, y_time,  x_frequency, y_frequency = mp.fft_filter_motion('H', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'H')
-        # plt.show()
-
+        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('X', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
             'X', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, 'X')
+        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                               y_frequency, 'X')
 
+
+        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('Y', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
             'Y', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, 'Y')
+        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                               y_frequency, 'Y')
 
+
+        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('W', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
             'W', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, 'W')
+        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                               y_frequency, 'W')
 
+        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('H', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
             'H', fps, LOW_PULSE_BPM, HIGH_PULSE_BPM)
-        self.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, 'H')
+        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                               y_frequency, 'H')
         plt.show()

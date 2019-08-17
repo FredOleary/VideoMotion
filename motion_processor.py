@@ -43,11 +43,18 @@ class MotionProcessor:
     def add_no_motion(self):
         try:
             if self.base_x is not None:
-                self.x.append(0)
-                self.y.append(0)
-                self.w.append(0)
-                self.h.append(0)
-                
+                if len(self.x) == 0:
+                    self.x.append(0)
+                    self.y.append(0)
+                    self.w.append(0)
+                    self.h.append(0)
+                else:
+                    self.x.append(self.x[len(self.x)-1])
+                    self.y.append(self.y[len(self.y)-1])
+                    self.w.append(self.w[len(self.w)-1])
+                    self.h.append(self.h[len(self.h)-1])
+
+
         except IndexError:
             print("foo")
     def fft_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
