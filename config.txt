@@ -1,0 +1,5 @@
+{
+    "low_pulse_bpm":30,     # low pulse rate in beats per minute
+    "high_pulse_bpm":150,   # high pulse rate in beats per minute
+    "video_fps":30          # preferred frame rate. (Does not apply to video files)
+}
