@@ -91,3 +91,4 @@ class MotionProcessor:
     def time_filter_series(series, fps, low_pulse_bpm, high_pulse_bpm):
         band_pass_filter = BandPassFilter()
         return band_pass_filter.time_filter(series, fps, low_pulse_bpm, high_pulse_bpm)
+
