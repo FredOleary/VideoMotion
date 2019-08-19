@@ -59,26 +59,26 @@ class MotionCapture:
         else:
             fig.suptitle(dimension + " Dimension - No data available", fontsize=14)
 
-    def test_filters(self):
-        mp = MotionProcessor()
-        fps = 12.0  # frames/second (sample rate)
-        sample_interval = 1.0 / fps  # sampling interval
-        length_of_signal_seconds = 15
-        x_time = np.arange(0, length_of_signal_seconds, sample_interval)  # time vector 15 seconds
-
-        pulse_rate_seconds = 0.9  # test pulse rate in seconds frequency (.9Hz = 54 bpm)
-        # y = np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time)
-
-        # Add some noise at 3 X the pulse rate and 1/3 amplitude, (comment out to remove noise)
-        y = np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time) + .3*np.sin(pulse_rate_seconds*3 * 2.0 * np.pi * x_time)
-
-        x_time, y_time, x_frequency, y_frequency = mp.fft_filter_series(y, fps, 'X', self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        self.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'X')
-
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_series(
-            y, fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        self.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive)
-        plt.show()
+    # def test_filters(self):
+    #     mp = MotionProcessor()
+    #     fps = 12.0  # frames/second (sample rate)
+    #     sample_interval = 1.0 / fps  # sampling interval
+    #     length_of_signal_seconds = 15
+    #     x_time = np.arange(0, length_of_signal_seconds, sample_interval)  # time vector 15 seconds
+    #
+    #     pulse_rate_seconds = 0.9  # test pulse rate in seconds frequency (.9Hz = 54 bpm)
+    #     # y = np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time)
+    #
+    #     # Add some noise at 3 X the pulse rate and 1/3 amplitude, (comment out to remove noise)
+    #     y = np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time) + .3*np.sin(pulse_rate_seconds*3 * 2.0 * np.pi * x_time)
+    #
+    #     x_time, y_time, x_frequency, y_frequency = mp.fft_filter_series(y, fps, 'X', self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+    #     self.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'X')
+    #
+    #     beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_series(
+    #         y, fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+    #     self.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive)
+    #     plt.show()
 
     def capture(self, video_file_or_camera):
         print("MotionCapture:capture")
