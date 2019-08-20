@@ -1,10 +1,14 @@
 import cv2
 import matplotlib.pyplot as plt
-from moviepy.editor import VideoFileClip
-import numpy as np
+
+import queue
+import threading
+import time
+
 from motion_processor import MotionProcessor
 
 
+# noinspection PyUnresolvedReferences
 class MotionCapture:
     def __init__(self, config):
         print("MotionCapture:__init__ openCV version: " + cv2.__version__)
@@ -27,16 +31,18 @@ class MotionCapture:
     @staticmethod
     def show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, dimension):
         fig, ax = plt.subplots(2, 1)
-        ax[0].plot(x_time, y_amplitude)
-        ax[0].set_xlabel('Time')
-        ax[0].set_ylabel('Amplitude - Unfiltered ' + dimension)
+        if len(x_time) > 0:
+            fig.suptitle(dimension + " Dimension BPM " + str(round(beats_per_minute, 2)), fontsize=14)
+            ax[0].plot(x_time, y_amplitude)
+            ax[0].set_xlabel('Time')
+            ax[0].set_ylabel('Amplitude - Unfiltered ' + dimension)
 
-        ax[1].plot(x_time,  y_amplitude_filtered, color=(1.0, 0.0, 0.0))
+            ax[1].plot(x_time,  y_amplitude_filtered, color=(1.0, 0.0, 0.0))
 
-        ax[1].plot(x_time[peaks_positive], y_amplitude_filtered[peaks_positive], 'ro', ms=3, label='positive peaks',
-                   color=(0.0, 0.0, 1.0))
-        ax[1].set_xlabel('Pulse (BMP) ' + str(round(beats_per_minute, 2)))
-        ax[1].set_ylabel('Amplitude - filtered ' + dimension)
+            ax[1].plot(x_time[peaks_positive], y_amplitude_filtered[peaks_positive], 'ro', ms=3, label='positive peaks',
+                       color=(0.0, 0.0, 1.0))
+            ax[1].set_xlabel('Pulse (BMP) ' + str(round(beats_per_minute, 2)))
+            ax[1].set_ylabel('Amplitude - filtered ' + dimension)
 
     @staticmethod
     def show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered,
@@ -84,33 +90,38 @@ class MotionCapture:
     # noinspection PyPep8
     def capture(self, video_file_or_camera):
         print("MotionCapture:capture")
-        fps = 30
+
+        send_queue = queue.Queue()
+        response_queue = queue.Queue()
+        process_worker = threading.Thread(target=self.process, args=(send_queue,))
+        process_worker.setDaemon(True)
+        process_worker.start()
+
         face_cascade = cv2.CascadeClassifier(self.config["face_classifier_path"])
 
-        if video_file_or_camera is not None:
-            clip = VideoFileClip(video_file_or_camera)
-            print(video_file_or_camera + " duration " + str(clip.duration) + ", framesPerSecond " + str(clip.fps))
-        else:
-            video_file_or_camera = 0    # First camera
-
-        mp = MotionProcessor()
+        if video_file_or_camera is None:
+            video_file_or_camera = 0  # First camera
 
         cap = cv2.VideoCapture(video_file_or_camera)
-
-        if video_file_or_camera == 0:
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config["resolution"]["width"])
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config["resolution"]["height"])
-            cap.set(cv2.CAP_PROP_FPS, self.config["video_fps"])
-
         # Check if camera opened successfully
         if not cap.isOpened():
             print("Error opening video stream or file, '" + video_file_or_camera + "'")
         else:
             fps = cap.get(cv2.CAP_PROP_FPS)
 
-        print( "Video: Resolution = " + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + " X "
+            if video_file_or_camera == 0:
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config["resolution"]["width"])
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config["resolution"]["height"])
+                cap.set(cv2.CAP_PROP_FPS, self.config["video_fps"])
+                fps = cap.get(cv2.CAP_PROP_FPS)
+            else:
+                self.config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                self.config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                self.config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
+            print( "Video: Resolution = " + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + " X "
                + str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) + ". Frames rate = " + str(round(fps)))
-#        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        mp = MotionProcessor()
         mp.initialize()
         while cap.isOpened():
             ret, frame = cap.read()
@@ -121,7 +132,6 @@ class MotionCapture:
                     for (x, y, w, h) in faces:
                         mp.add_motion_rectangle(x, y, w, h)
                         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 1)
-#                        print("width",w, "height", h)
                 else:
                     mp.add_no_motion()
                     print("----------------------------------------------No face in frame!")
@@ -138,27 +148,91 @@ class MotionCapture:
         # When everything done, release the video capture object
         cap.release()
 
-        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
-            'X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
-                               y_frequency, 'X')
+        # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+        #     'X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+        #                        y_frequency, 'X')
+        #
+        # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('Y', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+        #     'Y', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+        #                        y_frequency, 'Y')
+        #
+        # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('W', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+        #     'W', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+        #                        y_frequency, 'W')
+        #
+        # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('H', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+        #     'H', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+        # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+        #                        y_frequency, 'H')
+        # plt.show()
 
-        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('Y', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
-            'Y', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
-                               y_frequency, 'Y')
+        motion = {"verb":'process', "mp":mp, "response_queue":response_queue}
+        send_queue.put(motion)
 
-        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('W', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
-            'W', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
-                               y_frequency, 'W')
-
-        x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('H', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
-            'H', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
-        self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
-                               y_frequency, 'H')
+        response = response_queue.get()
+        self.show_time_results(response['beats_per_minute'], response['x_time'], response['y_amplitude'],
+                                        response['y_amplitude_filtered'], response['peaks_positive'],
+                                        response['dimension'])
+        plt.ion()
+        plt.pause(0.0001)
         plt.show()
+#        plt.pause(0.0001)
+        end = {"verb":'done'}
+        send_queue.put(end)
+        send_queue.join()
+
+        input("Press enter to exiting...\n")
+
+    def process(self, q):
+        while True:
+            print("Waiting for motion")
+            motion = q.get()
+            print("motion received")
+            time.sleep(5)
+            q.task_done()
+            if motion["verb"] == 'done':
+                print("process terminated")
+                break
+            elif motion["verb"] == "process":
+                print("processing motion")
+                mp = motion['mp']
+                # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+                    'X', self.config["video_fps"], self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                print("beats_per_minute: ", beats_per_minute)
+                motion["response_queue"].put({
+                    "beats_per_minute": beats_per_minute,
+                    "x_time": x_time,
+                    "y_amplitude": y_amplitude,
+                    "y_amplitude_filtered": y_amplitude_filtered,
+                    "peaks_positive": peaks_positive,
+                    "dimension": 'X'
+                })
+                # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                #                        y_frequency, 'X')
+
+                # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('Y', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+                #     'Y', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                #                        y_frequency, 'Y')
+                #
+                # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('W', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+                #     'W', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                #                        y_frequency, 'W')
+                #
+                # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('H', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                # beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
+                #     'H', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                # self.show_fft_and_time(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, x_frequency,
+                #                        y_frequency, 'H')
+
