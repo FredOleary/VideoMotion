@@ -3,12 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from motion_processor import MotionProcessor
 from motion_capture import MotionCapture
+from motion_charts import MotionCharts
+
 
 class TestFilters(unittest.TestCase):
 
     def test_time_filter(self):
         config = {"low_pulse_bpm":30, "high_pulse_bpm":150}
-        mc = MotionCapture(config)
+        motion_charts = MotionCharts()
+        motion_charts.initialize_time_test_chart("Test")
+
         mp = MotionProcessor()
         fps = 12.0  # frames/second (sample rate)
         sample_interval = 1.0 / fps  # sampling interval
@@ -23,13 +27,25 @@ class TestFilters(unittest.TestCase):
 
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_series(
             y, fps, config["low_pulse_bpm"], config["high_pulse_bpm"])
-        mc.show_time_results(beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive, "test")
         self.assertEqual(round(beats_per_minute), 54)
+
+        chart_data = {
+            "beats_per_minute": beats_per_minute,
+            "x_time": x_time,
+            "y_amplitude": y_amplitude,
+            "y_amplitude_filtered": y_amplitude_filtered,
+            "peaks_positive": peaks_positive,
+            "dimension": 'Test'
+        }
+
+        motion_charts.update_time_chart(chart_data)
         plt.show()
 
     def test_fft_filter(self):
         config = {"low_pulse_bpm":30, "high_pulse_bpm":150}
-        mc = MotionCapture(config)
+        motion_charts = MotionCharts()
+        motion_charts.initialize_fft_test_chart("Test")
+
         mp = MotionProcessor()
         fps = 30.0  # frames/second (sample rate)
         sample_interval = 1.0 / fps  # sampling interval
@@ -44,14 +60,22 @@ class TestFilters(unittest.TestCase):
 
         x_time, y_time, x_frequency, y_frequency = mp.fft_filter_series(y, fps, 'test',
                                                                         config["low_pulse_bpm"], config["high_pulse_bpm"])
-        mc.show_fft_results(x_time, y_time, x_frequency, y_frequency, 'test')
-
         for index in range(len(x_frequency)):
             if x_frequency[index] == pulse_rate_seconds:
-                self.assertEquals(round(y_frequency[index],1), 0.5 )
+                self.assertEqual(round(y_frequency[index],1), 0.5 )
             else:
-                self.assertEquals(round(y_frequency[index]), 0.0)
+                self.assertEqual(round(y_frequency[index]), 0.0)
+
+        chart_data = {
+            "x_time": x_time,
+            "y_amplitude": y_time,
+            "x_frequency": x_frequency,
+            "y_frequency": y_frequency,
+            "dimension": 'Test'
+        }
+        motion_charts.update_fft_chart(chart_data)
         plt.show()
+
 
 
 if __name__ == '__main__':
