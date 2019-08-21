@@ -50,7 +50,8 @@ class MotionCapture:
                 else:
                     self.pulse_rate_bpm = str(round(response["beats_per_minute"]))
 
-#            self.motion_charts.update_time_chart(response)
+            if self.config["show_pulse_charts"] is True:
+                self.motion_charts.update_time_chart(response)
             return True
         except queue.Empty:
             return False

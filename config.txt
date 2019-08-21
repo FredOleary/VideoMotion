@@ -3,6 +3,7 @@
     "high_pulse_bpm":150,   # high pulse rate in beats per minute
     "video_fps":30,          # preferred frame rate. (Does not apply to video files)
     "face_classifier_path":'/usr/local/lib/python3.7/site-packages/cv2/data/haarcascade_frontalface_default.xml',
-    "resolution":{"width":640,"height":480},
-    "pulse_frame_seconds":15  # sample time for calculating pulse
+    "resolution":{"width":640,"height":480}, # (Does not apply to video files)
+    "pulse_frame_seconds":15,  # sample time for calculating pulse
+    "show_pulse_charts":False   #if True then time series charts display pulse rate
 }
