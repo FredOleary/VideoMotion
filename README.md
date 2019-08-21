@@ -3,6 +3,10 @@
 todo
 1) Get source from git. clone/fork
 2) create venv
+python3 -m venv venv
+source venv/bin/activate
+
+ pip install numpy --ignore-installed
 3) load packages
 4) run hello. (Validate camera, open cv)
 
