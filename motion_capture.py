@@ -6,7 +6,7 @@ import threading
 import time
 
 from motion_processor import MotionProcessor
-
+from motion_charts import MotionCharts
 
 # noinspection PyUnresolvedReferences
 class MotionCapture:
@@ -123,6 +123,7 @@ class MotionCapture:
 
         mp = MotionProcessor()
         mp.initialize()
+        motion_charts = MotionCharts()
         while cap.isOpened():
             ret, frame = cap.read()
             if ret:
@@ -177,12 +178,13 @@ class MotionCapture:
         send_queue.put(motion)
 
         response = response_queue.get()
-        self.show_time_results(response['beats_per_minute'], response['x_time'], response['y_amplitude'],
-                                        response['y_amplitude_filtered'], response['peaks_positive'],
-                                        response['dimension'])
-        plt.ion()
-        plt.pause(0.0001)
-        plt.show()
+        # self.show_time_results(response['beats_per_minute'], response['x_time'], response['y_amplitude'],
+        #                                 response['y_amplitude_filtered'], response['peaks_positive'],
+        #                                 response['dimension'])
+        motion_charts.update(response)
+        # plt.ion()
+        # plt.pause(0.0001)
+        # plt.show()
 #        plt.pause(0.0001)
         end = {"verb":'done'}
         send_queue.put(end)
@@ -195,7 +197,7 @@ class MotionCapture:
             print("Waiting for motion")
             motion = q.get()
             print("motion received")
-            time.sleep(5)
+            # time.sleep(5)
             q.task_done()
             if motion["verb"] == 'done':
                 print("process terminated")
