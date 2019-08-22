@@ -1,4 +1,5 @@
 import sys
+import time
 import cv2
 
 VIDEO_FILE_CLIP = None
@@ -15,24 +16,26 @@ def play_video(config, video_file_or_camera):
     if not cap.isOpened():
         print("Error opening video stream or file, '" + video_file_or_camera + "'")
     else:
-        fps = cap.get(cv2.CAP_PROP_FPS)
-
         if video_file_or_camera == 0:
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, config["resolution"]["width"])
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config["resolution"]["height"])
             cap.set(cv2.CAP_PROP_FPS, config["video_fps"])
-            fps = cap.get(cv2.CAP_PROP_FPS)
-        else:
-            config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-            config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
 
-        print( "Video: Resolution = " + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + " X "
-           + str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) + ". Frames rate = " + str(round(fps)))
+        # Note that setting camera properties may not always work...
+        config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
+
+        print("Video: Resolution = " + str(config["resolution"]["width"]) + " X "
+              + str(config["resolution"]["height"]) + ". Frame rate = " + str(round(config["video_fps"])))
+
+    frame_count = 0
+    start_time = time.time()
 
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
+            frame_count = frame_count+1
             cv2.imshow('Frame', frame)
 
             # Press Q on keyboard to  exit
@@ -41,6 +44,8 @@ def play_video(config, video_file_or_camera):
         else:
             break
 
+    end_time = time.time()
+    print("Elapsed time: " + str(round(end_time-start_time)) + " fps: " + str( round(frame_count/(end_time-start_time), 2)))
     cv2.destroyWindow('Frame')
     # When everything done, release the video capture object
     cap.release()
