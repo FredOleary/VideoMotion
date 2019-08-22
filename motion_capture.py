@@ -19,8 +19,10 @@ class MotionCapture:
         self.process_worker = threading.Thread(target=self.process, args=(self.send_queue,))
         self.process_worker.setDaemon(True)
         self.process_worker.start()
-        self.motion_charts = MotionCharts()
-        self.motion_charts.initialize_charts()
+        if self.config["show_pulse_charts"] is True:
+            self.motion_charts = MotionCharts()
+            self.motion_charts.initialize_charts()
+            
         self.motion_processor = None
         self.start_time = None
         self.pulse_rate_bpm = "Not available"
@@ -70,20 +72,18 @@ class MotionCapture:
         if not cap.isOpened():
             print("Error opening video stream or file, '" + video_file_or_camera + "'")
         else:
-            fps = cap.get(cv2.CAP_PROP_FPS)
-
             if video_file_or_camera == 0:
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config["resolution"]["width"])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config["resolution"]["height"])
                 cap.set(cv2.CAP_PROP_FPS, self.config["video_fps"])
-                fps = cap.get(cv2.CAP_PROP_FPS)
-            else:
-                self.config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-                self.config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                self.config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
 
-            print( "Video: Resolution = " + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + " X "
-               + str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) + ". Frames rate = " + str(round(fps)))
+            # Note that setting camera properties may not always work...
+            self.config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            self.config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            self.config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
+
+            print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
+               + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
 
             self.initialize_frame()
 

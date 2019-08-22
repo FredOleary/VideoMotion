@@ -84,7 +84,7 @@ class MotionProcessor:
             series = self.w
         else:
             series = self.h
-
+        print(dimension + " dimension, length: " + str(len(series)))
         return band_pass_filter.time_filter(series, fps, low_pulse_bpm, high_pulse_bpm)
 
     @staticmethod
