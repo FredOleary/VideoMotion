@@ -45,7 +45,7 @@ def play_video(config, video_file_or_camera):
             break
 
     end_time = time.time()
-    print("Elapsed time: " + str(round(end_time-start_time)) + " secinds. fps:" + str( round(frame_count/(end_time-start_time), 2)))
+    print("Elapsed time: " + str(round(end_time-start_time)) + " seconds. fps:" + str( round(frame_count/(end_time-start_time), 2)))
     cv2.destroyWindow('Frame')
     # When everything done, release the video capture object
     cap.release()

@@ -22,7 +22,7 @@ class MotionCapture:
         if self.config["show_pulse_charts"] is True:
             self.motion_charts = MotionCharts()
             self.motion_charts.initialize_charts()
-            
+
         self.motion_processor = None
         self.start_time = None
         self.pulse_rate_bpm = "Not available"
@@ -87,6 +87,8 @@ class MotionCapture:
 
             self.initialize_frame()
 
+        frame_count = 0
+        start_time = time.time()
         while cap.isOpened():
             ret, frame = cap.read()
             if ret:
@@ -114,6 +116,9 @@ class MotionCapture:
             else:
                 break
 
+        end_time = time.time()
+        print("Elapsed time: " + str(round(end_time - start_time)) + " seconds. fps:" + str(
+            round(frame_count / (end_time - start_time), 2)))
         cv2.destroyWindow('Frame')
         # When everything done, release the video capture object
         cap.release()
