@@ -4,14 +4,14 @@ import numpy as np
 
 
 class BandPassFilter:
-    def __init__(self):
-        print("BandPassFilter:__init__")
+    #    def __init__(self):
 
     @staticmethod
     def butter_bandpass(low_cut, high_cut, fs, order=5):
         nyq = 0.5 * fs
         low = low_cut / nyq
         high = high_cut / nyq
+        # noinspection PyTupleAssignmentBalance
         b, a = butter(order, [low, high], btype='band')
         return b, a
 
@@ -21,7 +21,6 @@ class BandPassFilter:
         return y
 
     def time_filter(self, y_amplitude, fps, low_pulse_bpm=None, high_pulse_bpm=None):
-
         if low_pulse_bpm is None:
             low_pulse_bps = 0
         else:
@@ -42,12 +41,11 @@ class BandPassFilter:
 
             # find peaks
             peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.5, threshold=None)
+            if len(peaks_positive) > 1:
+                time_intervals = np.average(np.diff(peaks_positive))
+                per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
+                beats_per_minute = 1/per_beat_in_seconds * 60
+                return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
 
-            time_intervals = np.average(np.diff(peaks_positive))
-            per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
-
-            beats_per_minute = 1/per_beat_in_seconds * 60
-            return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
-        else:
-            # return empy arrays.
-            return 0, x_time, x_time, x_time, x_time
+        # return empty arrays.
+        return 0, x_time, x_time, x_time, x_time

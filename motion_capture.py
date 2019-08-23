@@ -1,5 +1,4 @@
 import cv2
-import matplotlib.pyplot as plt
 
 import queue
 import threading
@@ -7,6 +6,7 @@ import time
 
 from motion_processor import MotionProcessor
 from motion_charts import MotionCharts
+
 
 # noinspection PyUnresolvedReferences
 class MotionCapture:
@@ -24,23 +24,23 @@ class MotionCapture:
             self.motion_charts.initialize_charts()
 
         self.motion_processor = None
-        self.start_time = None
+        self.start_sample_time = None
         self.pulse_rate_bpm = "Not available"
         self.tracker = None
 
     def initialize_frame(self):
         self.motion_processor = MotionProcessor()
         self.motion_processor.initialize()
-        self.start_time = time.time()
+        self.start_sample_time = time.time()
 
     def check_frame(self):
-        if (time.time() - self.start_time) > self.config["pulse_frame_seconds"]:
+        if (time.time() - self.start_sample_time) > self.config["pulse_sample_seconds"]:
             return True
         else:
             return False
 
     def queue_results(self):
-        motion = {"verb":'process', "mp":self.motion_processor, "response_queue":self.response_queue}
+        motion = {"verb": 'process', "mp": self.motion_processor, "response_queue": self.response_queue}
         self.send_queue.put(motion)
 
     def check_response(self):
@@ -57,7 +57,6 @@ class MotionCapture:
             return True
         except queue.Empty:
             return False
-
 
     # noinspection PyPep8
     def capture(self, video_file_or_camera):
@@ -90,9 +89,8 @@ class MotionCapture:
             self.initialize_frame()
 
         frame_count = 0
-        start_time = time.time()
+        start_capture_time = time.time()
         tracking = False
-        bbox = None
         while cap.isOpened():
             ret, frame = cap.read()
             if ret:
@@ -103,17 +101,12 @@ class MotionCapture:
                     if len(faces) == 1:
                         for (x, y, w, h) in faces:
                             self.motion_processor.add_motion_rectangle(x, y, w, h)
-
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                        bbox = (x, y, x + w, y + h)
+                            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                         tracking = True
                     else:
                         self.motion_processor.add_no_motion()
 
                 else:
-                    p1 = (int(bbox[0]), int(bbox[1]))
-                    p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
-
                     # Update tracker
                     ok, bbox = self.tracker.update(frame)
                     if ok:
@@ -126,8 +119,8 @@ class MotionCapture:
                     else:
                         tracking = False
 
-                cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm, (30,30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm + " Frame: " +str(frame_count),
+                            (30,30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
                 cv2.imshow('Frame', frame)
 
                 if self.check_frame():
@@ -143,9 +136,9 @@ class MotionCapture:
             else:
                 break
 
-        end_time = time.time()
-        print("Elapsed time: " + str(round(end_time - start_time)) + " seconds. fps:" + str(
-            round(frame_count / (end_time - start_time), 2)))
+        end_capture_time = time.time()
+        print("Elapsed time: " + str(round(end_capture_time - start_capture_time,2)) + " seconds. fps:" + str(
+            round(frame_count / (end_capture_time - start_capture_time), 2)) + ". Frame count: " + str(frame_count))
         cv2.destroyWindow('Frame')
         # When everything done, release the video capture object
         cap.release()
@@ -154,10 +147,12 @@ class MotionCapture:
         self.send_queue.put(end)
         self.send_queue.join()
         input("Hit Enter to exit")
+
     def process(self, q):
         def enqueue_dimension(dimension, config):
             mp = motion['mp']
-            # x_time, y_amplitude,  x_frequency, y_frequency = mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+            # x_time, y_amplitude,  x_frequency, y_frequency = \
+            #    mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
             beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
                 dimension, config["video_fps"], config["low_pulse_bpm"], config["high_pulse_bpm"])
             print("beats_per_minute: ", beats_per_minute)
