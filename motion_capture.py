@@ -26,7 +26,7 @@ class MotionCapture:
         self.motion_processor = None
         self.start_time = None
         self.pulse_rate_bpm = "Not available"
-
+        self.tracker = None
 
     def initialize_frame(self):
         self.motion_processor = MotionProcessor()
@@ -85,39 +85,55 @@ class MotionCapture:
             print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
                + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
 
+            self.tracker = cv2.TrackerKCF_create()
+
             self.initialize_frame()
 
         frame_count = 0
         start_time = time.time()
-        face_miss_count = 0
+        tracking = False
+        bbox = None
         while cap.isOpened():
             ret, frame = cap.read()
             if ret:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-                if len(faces) == 1:
-                    if face_miss_count < 3:
+                frame_count = frame_count+1
+                if not tracking:
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+                    if len(faces) == 1:
                         for (x, y, w, h) in faces:
                             self.motion_processor.add_motion_rectangle(x, y, w, h)
+
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                        bbox = (x, y, x + w, y + h)
+                        tracking = True
                     else:
-                        # Reset reference rectangle.
-                        print("Reference face updated")
-                        for (x, y, w, h) in faces:
-                            self.motion_processor.add_motion_rectangle(x, y, w, h, force=True)
                         self.motion_processor.add_no_motion()
 
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                    face_miss_count = 0
                 else:
-                    self.motion_processor.add_no_motion()
-                    face_miss_count = face_miss_count+1
+                    p1 = (int(bbox[0]), int(bbox[1]))
+                    p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+
+                    # Update tracker
+                    ok, bbox = self.tracker.update(frame)
+                    if ok:
+                        x = int(bbox[0])
+                        y = int(bbox[1])
+                        w = int(bbox[2])
+                        h = int(bbox[3])
+                        self.motion_processor.add_motion_rectangle(x, y, w, h)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                    else:
+                        tracking = False
 
                 cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm, (30,30),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
                 cv2.imshow('Frame', frame)
+
                 if self.check_frame():
                     self.queue_results()
                     self.initialize_frame()
+                    tracking = False
                 else:
                     self.check_response()
 
@@ -137,7 +153,7 @@ class MotionCapture:
         end = {"verb":'done'}
         self.send_queue.put(end)
         self.send_queue.join()
-
+        input("Hit Enter to exit")
     def process(self, q):
         def enqueue_dimension(dimension, config):
             mp = motion['mp']
