@@ -95,14 +95,17 @@ class MotionCapture:
             ret, frame = cap.read()
             if ret:
                 frame_count = frame_count+1
-                if not tracking:
+                if self.config['use_tracking_after_detect'] or not tracking:
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                     if len(faces) == 1:
                         for (x, y, w, h) in faces:
                             self.motion_processor.add_motion_rectangle(x, y, w, h)
                             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                        tracking = True
+                        track_box = (x, y, w, h)
+                        if self.config['use_tracking_after_detect']:
+                            tracking = True
+                            self.tracker.init(frame, track_box)
                     else:
                         self.motion_processor.add_no_motion()
 
@@ -110,6 +113,7 @@ class MotionCapture:
                     # Update tracker
                     ok, bbox = self.tracker.update(frame)
                     if ok:
+                        # print("Tracker succeeded")
                         x = int(bbox[0])
                         y = int(bbox[1])
                         w = int(bbox[2])
@@ -117,6 +121,7 @@ class MotionCapture:
                         self.motion_processor.add_motion_rectangle(x, y, w, h)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                     else:
+                        print("Tracker failed")
                         tracking = False
 
                 cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm + " Frame: " +str(frame_count),

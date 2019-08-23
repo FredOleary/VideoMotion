@@ -5,5 +5,6 @@
     "face_classifier_path":'/Users/fredoleary/home_projects/VideoMotion/venv/lib/python3.7/site-packages/cv2/data/haarcascade_frontalface_default.xml',
     "resolution":{"width":640,"height":480}, # (Does not apply to video files)
     "pulse_sample_seconds":10,  # sample time for calculating pulse
-    "show_pulse_charts":False   #if True then display pulse rate time series charts are displayed
+    "show_pulse_charts":True,   #if True then display pulse rate time series charts are displayed
+    "use_tracking_after_detect":False # Use tracking after face detection
 }

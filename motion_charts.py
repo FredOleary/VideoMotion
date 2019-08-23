@@ -30,15 +30,18 @@ class MotionCharts:
         self.charts[data['dimension']]["ax"][0].clear()
         self.charts[data['dimension']]["ax"][1].clear()
         if len(data['x_time']) > 0:
-            self.charts[data['dimension']]["fig"].suptitle(data['dimension'] + " Dimension BPM - " +
-                                                         str(round(data['beats_per_minute'], 2)), fontsize=14)
-            self.charts[data['dimension']]["ax"][0].plot(data['x_time'], data['y_amplitude'])
-            self.charts[data['dimension']]["ax"][1].plot(data['x_time'], data['y_amplitude_filtered'],
-                                                         color=(1.0, 0.0, 0.0))
-            self.charts[data['dimension']]["ax"][1].plot(data['x_time'][data['peaks_positive']],
-                                                          data['y_amplitude_filtered'][data['peaks_positive']],
-                                                         'ro', ms = 3, label = 'positive peaks',
-                                                         color = (0.0, 0.0, 1.0))
+            try:
+                self.charts[data['dimension']]["fig"].suptitle(data['dimension'] + " Dimension BPM - " +
+                                                             str(round(data['beats_per_minute'], 2)), fontsize=14)
+                self.charts[data['dimension']]["ax"][0].plot(data['x_time'], data['y_amplitude'])
+                self.charts[data['dimension']]["ax"][1].plot(data['x_time'], data['y_amplitude_filtered'],
+                                                             color=(1.0, 0.0, 0.0))
+                self.charts[data['dimension']]["ax"][1].plot(data['x_time'][data['peaks_positive']],
+                                                              data['y_amplitude_filtered'][data['peaks_positive']],
+                                                             'ro', ms = 3, label = 'positive peaks',
+                                                             color = (0.0, 0.0, 1.0))
+            except IndexError:
+                print("charting error")
         else:
             self.charts[data['dimension']]["fig"].suptitle(data['dimension'] + " Dimension BPM - Not available"
                                                            , fontsize=14)
