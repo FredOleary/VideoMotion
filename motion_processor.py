@@ -28,8 +28,8 @@ class MotionProcessor:
         self.start_time = time.time()
         print("MotionProcessor : initialized at: " + str(self.start_time))
 
-    def add_motion_rectangle(self, x, y, w, h):
-        if self.base_x is None:
+    def add_motion_rectangle(self, x, y, w, h, force=False):
+        if self.base_x is None or force:
             self.base_x = x
             self.base_y = y
             self.base_w = w

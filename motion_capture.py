@@ -89,17 +89,28 @@ class MotionCapture:
 
         frame_count = 0
         start_time = time.time()
+        face_miss_count = 0
         while cap.isOpened():
             ret, frame = cap.read()
             if ret:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                 if len(faces) == 1:
-                    for (x, y, w, h) in faces:
-                        self.motion_processor.add_motion_rectangle(x, y, w, h)
-                        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 1)
+                    if face_miss_count < 3:
+                        for (x, y, w, h) in faces:
+                            self.motion_processor.add_motion_rectangle(x, y, w, h)
+                    else:
+                        # Reset reference rectangle.
+                        print("Reference face updated")
+                        for (x, y, w, h) in faces:
+                            self.motion_processor.add_motion_rectangle(x, y, w, h, force=True)
+                        self.motion_processor.add_no_motion()
+
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                    face_miss_count = 0
                 else:
                     self.motion_processor.add_no_motion()
+                    face_miss_count = face_miss_count+1
 
                 cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm, (30,30),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
