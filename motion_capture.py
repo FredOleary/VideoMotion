@@ -6,6 +6,8 @@ import os
 import cv2
 
 from camera_opencv import CameraOpenCv
+from camera_raspbian import CameraRaspbian
+
 from motion_processor import MotionProcessor
 from motion_charts import MotionCharts
 
