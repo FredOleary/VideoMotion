@@ -2,6 +2,8 @@ import sys
 import time
 import cv2
 
+from camera_opencv import CameraOpenCv
+
 VIDEO_FILE_CLIP = None
 CONFIG_FILE = "config.txt"
 
@@ -12,19 +14,21 @@ def play_video(config, video_file_or_camera):
     if video_file_or_camera is None:
         video_file_or_camera = 0  # First camera
 
-    cap = cv2.VideoCapture(video_file_or_camera)
-    if not cap.isOpened():
+    video = create_camera(video_file_or_camera)
+
+    is_opened = video.open_video(video_file_or_camera)
+    if not is_opened:
         print("Error opening video stream or file, '" + video_file_or_camera + "'")
     else:
         if video_file_or_camera == 0:
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, config["resolution"]["width"])
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config["resolution"]["height"])
-            cap.set(cv2.CAP_PROP_FPS, config["video_fps"])
+            video.set_frame_rate(config["video_fps"])
+            video.set_resolution(config["resolution"]["width"], config["resolution"]["height"])
 
+        width, height = video.get_resolution()
         # Note that setting camera properties may not always work...
-        config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
+        config["resolution"]["width"] = width
+        config["resolution"]["height"] = height
+        config["video_fps"] = video.get_frame_rate()
 
         print("Video: Resolution = " + str(config["resolution"]["width"]) + " X "
               + str(config["resolution"]["height"]) + ". Frame rate = " + str(round(config["video_fps"])))
@@ -32,8 +36,8 @@ def play_video(config, video_file_or_camera):
     frame_count = 0
     start_time = time.time()
 
-    while cap.isOpened():
-        ret, frame = cap.read()
+    while video.is_opened():
+        ret, frame = video.read_frame()
         if ret:
             frame_count = frame_count+1
             cv2.imshow('Frame', frame)
@@ -48,7 +52,7 @@ def play_video(config, video_file_or_camera):
     print("Elapsed time: " + str(round(end_time-start_time)) + " seconds. fps:" + str( round(frame_count/(end_time-start_time), 2)))
     cv2.destroyWindow('Frame')
     # When everything done, release the video capture object
-    cap.release()
+    video.close_video()
 
 
 
@@ -57,6 +61,9 @@ def read_config():
         dict_from_file = eval(config.read())
     return dict_from_file
 
+def create_camera( video_file_or_camera):
+     ### For files nor non raspberrypi devices, use open cv
+    return CameraOpenCv(cv2)
 
 def main(args):
     global VIDEO_FILE_CLIP

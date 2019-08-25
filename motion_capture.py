@@ -4,6 +4,7 @@ import queue
 import threading
 import time
 
+from camera_opencv import CameraOpenCv
 from motion_processor import MotionProcessor
 from motion_charts import MotionCharts
 
@@ -67,19 +68,21 @@ class MotionCapture:
         if video_file_or_camera is None:
             video_file_or_camera = 0  # First camera
 
-        cap = cv2.VideoCapture(video_file_or_camera)
-        if not cap.isOpened():
+        video = self.create_camera(video_file_or_camera)
+
+        is_opened = video.open_video(video_file_or_camera)
+        if not is_opened:
             print("Error opening video stream or file, '" + video_file_or_camera + "'")
         else:
             if video_file_or_camera == 0:
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config["resolution"]["width"])
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config["resolution"]["height"])
-                cap.set(cv2.CAP_PROP_FPS, self.config["video_fps"])
+                video.set_frame_rate(self.config["video_fps"])
+                video.set_resolution( self.config["resolution"]["width"], self.config["resolution"]["height"] )
 
+            width, height = video.get_resolution()
             # Note that setting camera properties may not always work...
-            self.config["resolution"]["width"] = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-            self.config["resolution"]["height"] = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            self.config["video_fps"] = cap.get(cv2.CAP_PROP_FPS)
+            self.config["resolution"]["width"] = width
+            self.config["resolution"]["height"] = height
+            self.config["video_fps"] = video.get_frame_rate()
 
             print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
                + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
@@ -91,8 +94,8 @@ class MotionCapture:
         frame_count = 0
         start_capture_time = time.time()
         tracking = False
-        while cap.isOpened():
-            ret, frame = cap.read()
+        while video.is_opened():
+            ret, frame = video.read_frame()
             if ret:
                 frame_count = frame_count+1
                 if self.config['use_tracking_after_detect'] or not tracking:
@@ -146,7 +149,7 @@ class MotionCapture:
             round(frame_count / (end_capture_time - start_capture_time), 2)) + ". Frame count: " + str(frame_count))
         cv2.destroyWindow('Frame')
         # When everything done, release the video capture object
-        cap.release()
+        video.close_video()
 
         end = {"verb":'done'}
         self.send_queue.put(end)
@@ -184,3 +187,6 @@ class MotionCapture:
                 enqueue_dimension('H', self.config)
                 q.task_done()
 
+    def create_camera(self, video_file_or_camera):
+        ### For files nor non raspberrypi devices, use open cv
+        return CameraOpenCv(cv2)
