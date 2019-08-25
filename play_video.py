@@ -1,8 +1,10 @@
 import sys
 import time
+import os
 import cv2
 
 from camera_opencv import CameraOpenCv
+from camera_raspbian import CameraRaspbian
 
 VIDEO_FILE_CLIP = None
 CONFIG_FILE = "config.txt"
@@ -52,7 +54,7 @@ def play_video(config, video_file_or_camera):
     print("Elapsed time: " + str(round(end_time-start_time)) + " seconds. fps:" + str( round(frame_count/(end_time-start_time), 2)))
     cv2.destroyWindow('Frame')
     # When everything done, release the video capture object
-    video.close_video()
+	video.close_video()
 
 
 
@@ -63,7 +65,10 @@ def read_config():
 
 def create_camera( video_file_or_camera):
      ### For files nor non raspberrypi devices, use open cv
-    return CameraOpenCv(cv2)
+	if os.path_exists("/etc/rpi-issue"):
+		return CameraRaspbian()
+	else:
+		return None
 
 def main(args):
     global VIDEO_FILE_CLIP
