@@ -9,7 +9,8 @@ from camera_raspbian import CameraRaspbian
 VIDEO_FILE_CLIP = None
 CONFIG_FILE = "config.txt"
 
-    # noinspection PyPep8
+
+# noinspection PyPep8
 def play_video(config, video_file_or_camera):
     print("play_video")
 
@@ -41,7 +42,7 @@ def play_video(config, video_file_or_camera):
     while video.is_opened():
         ret, frame = video.read_frame()
         if ret:
-            frame_count = frame_count+1
+            frame_count = frame_count + 1
             cv2.imshow('Frame', frame)
 
             # Press Q on keyboard to  exit
@@ -51,11 +52,11 @@ def play_video(config, video_file_or_camera):
             break
 
     end_time = time.time()
-    print("Elapsed time: " + str(round(end_time-start_time)) + " seconds. fps:" + str( round(frame_count/(end_time-start_time), 2)))
+    print("Elapsed time: " + str(round(end_time - start_time)) + " seconds. fps:" + str(
+        round(frame_count / (end_time - start_time), 2)))
     cv2.destroyWindow('Frame')
     # When everything done, release the video capture object
-	video.close_video()
-
+    video.close_video()
 
 
 def read_config():
@@ -63,12 +64,14 @@ def read_config():
         dict_from_file = eval(config.read())
     return dict_from_file
 
-def create_camera( video_file_or_camera):
-     ### For files nor non raspberrypi devices, use open cv
-	if os.path_exists("/etc/rpi-issue"):
-		return CameraRaspbian()
-	else:
-		return None
+
+def create_camera(video_file_or_camera):
+    # For files nor non raspberry pi devices, use open cv, for realtime video on raspberry pi, use CameraRaspbian
+    if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0 :
+        return CameraRaspbian()
+    else:
+        return CameraOpenCv(cv2)
+
 
 def main(args):
     global VIDEO_FILE_CLIP
