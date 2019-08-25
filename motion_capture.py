@@ -1,8 +1,9 @@
-import cv2
-
 import queue
 import threading
 import time
+import os
+
+import cv2
 
 from camera_opencv import CameraOpenCv
 from motion_processor import MotionProcessor
@@ -187,6 +188,10 @@ class MotionCapture:
                 enqueue_dimension('H', self.config)
                 q.task_done()
 
+
     def create_camera(self, video_file_or_camera):
-        ### For files nor non raspberrypi devices, use open cv
-        return CameraOpenCv(cv2)
+        # For files nor non raspberry pi devices, use open cv, for realtime video on raspberry pi, use CameraRaspbian
+        if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0 :
+            return CameraRaspbian()
+        else:
+            return CameraOpenCv(cv2)
