@@ -2,7 +2,6 @@
     "low_pulse_bpm":30,     # low pulse rate in beats per minute
     "high_pulse_bpm":150,   # high pulse rate in beats per minute
     "video_fps":30,          # preferred frame rate. (Does not apply to video files)
-    "face_classifier_path":'/Users/fredoleary/home_projects/VideoMotion/venv/lib/python3.7/site-packages/cv2/data/haarcascade_frontalface_default.xml',
     "resolution":{"width":640,"height":480}, # (Does not apply to video files)
     "pulse_sample_seconds":10,  # sample time for calculating pulse
     "show_pulse_charts":False,   #if True then display pulse rate time series charts are displayed

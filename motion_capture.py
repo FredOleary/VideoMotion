@@ -66,7 +66,7 @@ class MotionCapture:
     def capture(self, video_file_or_camera):
         print("MotionCapture:capture")
 
-        face_cascade = cv2.CascadeClassifier(self.config["face_classifier_path"])
+        face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
 
         if video_file_or_camera is None:
             video_file_or_camera = 0  # First camera

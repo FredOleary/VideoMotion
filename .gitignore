@@ -23,4 +23,6 @@ testfft.py
 #virtual environment
 venv/
 
+data/
+
 *.pyc
