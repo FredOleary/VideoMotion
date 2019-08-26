@@ -107,6 +107,7 @@ class MotionCapture:
                             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                         track_box = (x, y, w, h)
                         if self.config['use_tracking_after_detect']:
+                            print("Tracking after face detect")
                             tracking = True
                             self.tracker.init(frame, track_box)
                     else:
