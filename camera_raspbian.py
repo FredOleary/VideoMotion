@@ -31,13 +31,13 @@ class CameraRaspbian:
             self.stream = self.camera.capture_continuous(self.rawCapture,
                                                          format="bgr", use_video_port=True)
             self.frame = self.rawCapture.array
-            
+
             Thread(target=self.update, args=()).start()
 
             self.frame = None
             self.stopped = False
             # allow the camera to warmup
-            time.sleep(0.1)
+            time.sleep(0.3)
             self.is_open = True
             return True
         except PiCameraMMALError:

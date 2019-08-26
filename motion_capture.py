@@ -71,7 +71,8 @@ class MotionCapture:
         if video_file_or_camera is None:
             video_file_or_camera = 0  # First camera
 
-        video = self.create_camera(video_file_or_camera)
+        video = self.create_camera(video_file_or_camera, self.config["video_fps"], self.config["resolution"]["width"],
+                                   self.config["resolution"]["height"])
 
         is_opened = video.open_video(video_file_or_camera)
         if not is_opened:
@@ -190,10 +191,9 @@ class MotionCapture:
                 enqueue_dimension('H', self.config)
                 q.task_done()
 
-
-    def create_camera(self, video_file_or_camera):
+    def create_camera(self, video_file_or_camera, fps, width, height):
         # For files nor non raspberry pi devices, use open cv, for realtime video on raspberry pi, use CameraRaspbian
-        if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0 :
-            return CameraRaspbian()
+        if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0:
+            return CameraRaspbian(fps, width, height)
         else:
-            return CameraOpenCv(cv2)
+            return CameraOpenCv(cv2, fps, width, height)

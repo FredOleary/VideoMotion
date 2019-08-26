@@ -24,10 +24,6 @@ def play_video(config, video_file_or_camera):
     if not is_opened:
         print("Error opening video stream or file, '" + str(video_file_or_camera) + "'")
     else:
-        # if video_file_or_camera == 0:
-        # Note that setting camera properties may not always work...
-        #     video.set_frame_rate(config["video_fps"])
-        #     video.set_resolution(config["resolution"]["width"], config["resolution"]["height"])
 
         width, height = video.get_resolution()
         config["resolution"]["width"] = width
