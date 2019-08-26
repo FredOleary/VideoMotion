@@ -2,8 +2,8 @@
     "low_pulse_bpm":30,     # low pulse rate in beats per minute
     "high_pulse_bpm":150,   # high pulse rate in beats per minute
     "video_fps":60,          # preferred frame rate. (Does not apply to video files)
-    "resolution":{"width":320,"height":240}, # (Does not apply to video files)
+    "resolution":{"width":640,"height":480}, # (Does not apply to video files)
     "pulse_sample_seconds":10,  # sample time for calculating pulse
     "show_pulse_charts":False,   #if True then display pulse rate time series charts are displayed
-    "use_tracking_after_detect":False # Use tracking after face detection
+    "use_tracking_after_detect":True # Use tracking after face detection
 }

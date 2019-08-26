@@ -98,7 +98,7 @@ class MotionCapture:
             ret, frame = video.read_frame()
             if ret:
                 frame_count = frame_count+1
-                if self.config['use_tracking_after_detect'] or not tracking:
+                if not self.config['use_tracking_after_detect'] or not tracking:
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                     if len(faces) == 1:
@@ -125,6 +125,7 @@ class MotionCapture:
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                     else:
                         print("Tracker failed")
+                        self.initialize_frame()
                         tracking = False
 
                 cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm + " Frame: " +str(frame_count),
