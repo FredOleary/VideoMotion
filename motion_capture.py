@@ -78,12 +78,8 @@ class MotionCapture:
         if not is_opened:
             print("Error opening video stream or file, '" + video_file_or_camera + "'")
         else:
-            if video_file_or_camera == 0:
-                video.set_frame_rate(self.config["video_fps"])
-                video.set_resolution( self.config["resolution"]["width"], self.config["resolution"]["height"] )
-
+            # Verify/retrieve that setting camera/video properties.
             width, height = video.get_resolution()
-            # Note that setting camera properties may not always work...
             self.config["resolution"]["width"] = width
             self.config["resolution"]["height"] = height
             self.config["video_fps"] = video.get_frame_rate()
