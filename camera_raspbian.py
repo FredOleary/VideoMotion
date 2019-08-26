@@ -20,6 +20,7 @@ class CameraRaspbian:
         self.stream = None
         self.stopped = False
         self.rawCapture = None
+        self.frame = None
 
     def open_video(self, video_file_or_camera):
         try:
@@ -29,6 +30,8 @@ class CameraRaspbian:
             self.rawCapture = PiRGBArray(self.camera, size=(self.width, self.height))
             self.stream = self.camera.capture_continuous(self.rawCapture,
                                                          format="bgr", use_video_port=True)
+            self.frame = self.rawCapture.array
+            
             Thread(target=self.update, args=()).start()
 
             self.frame = None
