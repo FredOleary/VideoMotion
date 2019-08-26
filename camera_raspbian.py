@@ -12,15 +12,18 @@ class CameraRaspbian:
 
     def __init__(self):
         print("CameraRaspberian camera created")
+        self.is_open = False
 
     def open_video(self, video_file_or_camera):
         try:
             self.camera = PiCamera()
             # allow the camera to warmup
             time.sleep(0.1)
+            self.is_open = True
             return True
         except PiCameraMMALError:
             print("CameraRaspberian - open camera failed")
+            self.is_open = False
             return False
 
     def set_frame_rate(self, fps):
@@ -43,7 +46,8 @@ class CameraRaspbian:
         return True, self.rawCapture.array
 
     def close_video(self):
+        self.is_open = False
         return True
 
     def is_opened(self):
-        return True
+        return self.is_open

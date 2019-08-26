@@ -21,7 +21,7 @@ def play_video(config, video_file_or_camera):
 
     is_opened = video.open_video(video_file_or_camera)
     if not is_opened:
-        print("Error opening video stream or file, '" + video_file_or_camera + "'")
+        print("Error opening video stream or file, '" + str(video_file_or_camera) + "'")
     else:
         if video_file_or_camera == 0:
             video.set_frame_rate(config["video_fps"])
@@ -43,7 +43,7 @@ def play_video(config, video_file_or_camera):
         ret, frame = video.read_frame()
         if ret:
             frame_count = frame_count + 1
-            cv2.imshow('Frame', frame)
+            cv2.imshow('Video', frame)
 
             # Press Q on keyboard to  exit
             if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -54,7 +54,7 @@ def play_video(config, video_file_or_camera):
     end_time = time.time()
     print("Elapsed time: " + str(round(end_time - start_time)) + " seconds. fps:" + str(
         round(frame_count / (end_time - start_time), 2)))
-    cv2.destroyWindow('Frame')
+    cv2.destroyAllWindows()
     # When everything done, release the video capture object
     video.close_video()
 
