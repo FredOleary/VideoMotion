@@ -43,6 +43,14 @@ def play_video(config, video_file_or_camera):
         ret, frame = video.read_frame()
         if ret:
             frame_count = frame_count + 1
+            # cv2.putText(frame, "Frame: " ,
+            #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+            cv2.putText(frame, "Frame: " + str(frame_count) + ". FPS:" + str( round(frame_count / (time.time() - start_time), 2)),
+                        (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+
+            # cv2.putText(frame, "Pulse rate (BPM): " + self.pulse_rate_bpm + " Frame: " + str(frame_count),
+            #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+
             cv2.imshow('Video', frame)
 
             # Press Q on keyboard to  exit
