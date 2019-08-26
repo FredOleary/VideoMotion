@@ -17,18 +17,19 @@ def play_video(config, video_file_or_camera):
     if video_file_or_camera is None:
         video_file_or_camera = 0  # First camera
 
-    video = create_camera(video_file_or_camera)
+    video = create_camera(video_file_or_camera, config["video_fps"], config["resolution"]["width"],
+                          config["resolution"]["height"])
 
     is_opened = video.open_video(video_file_or_camera)
     if not is_opened:
         print("Error opening video stream or file, '" + str(video_file_or_camera) + "'")
     else:
-        if video_file_or_camera == 0:
-            video.set_frame_rate(config["video_fps"])
-            video.set_resolution(config["resolution"]["width"], config["resolution"]["height"])
+        # if video_file_or_camera == 0:
+        # Note that setting camera properties may not always work...
+        #     video.set_frame_rate(config["video_fps"])
+        #     video.set_resolution(config["resolution"]["width"], config["resolution"]["height"])
 
         width, height = video.get_resolution()
-        # Note that setting camera properties may not always work...
         config["resolution"]["width"] = width
         config["resolution"]["height"] = height
         config["video_fps"] = video.get_frame_rate()
@@ -73,12 +74,12 @@ def read_config():
     return dict_from_file
 
 
-def create_camera(video_file_or_camera):
+def create_camera(video_file_or_camera, fps, width, height):
     # For files nor non raspberry pi devices, use open cv, for realtime video on raspberry pi, use CameraRaspbian
     if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0 :
-        return CameraRaspbian()
+        return CameraRaspbian(fps, width, height)
     else:
-        return CameraOpenCv(cv2)
+        return CameraOpenCv(cv2, fps, width, height)
 
 
 def main(args):

@@ -10,13 +10,19 @@ except ImportError:
 
 class CameraRaspbian:
 
-    def __init__(self):
+    def __init__(self, fps, width, height):
         print("CameraRaspberian camera created")
+        self.fps = fps
+        self.width = width
+        self.height = height
         self.is_open = False
 
     def open_video(self, video_file_or_camera):
         try:
             self.camera = PiCamera()
+            self.camera.resolution = (self.width, self.height)
+            self.camera.framerate = self.fps
+            self.rawCapture = PiRGBArray(self.camera, size=(self.width, self.height))
             # allow the camera to warmup
             time.sleep(0.1)
             self.is_open = True
@@ -46,6 +52,7 @@ class CameraRaspbian:
         return True, self.rawCapture.array
 
     def close_video(self):
+        self.camera.close()
         self.is_open = False
         return True
 

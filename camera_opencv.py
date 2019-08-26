@@ -3,11 +3,18 @@ import cv2
 
 class CameraOpenCv:
 
-    def __init__(self, cv2):
+    def __init__(self, cv2, fps, width, height):
         self.cv2 = cv2
+        self.fps = fps
+        self.width = width
+        self.height = height
+        self.capture = None
 
     def open_video(self, video_file_or_camera):
         self.capture = self.cv2.VideoCapture(video_file_or_camera)
+        self.capture.set(self.cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self.capture.set(self.cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.capture.set(self.cv2.CAP_PROP_FPS, self.fps)
         return self.capture.isOpened()
 
     def set_frame_rate(self, fps):
