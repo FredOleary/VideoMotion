@@ -1,5 +1,5 @@
 # Measuring pulse rate by analysing micro changes in head motion
-This project estimates pulse rate from a video stream by measuring face micro motion
+This project estimates pulse rate from a video stream by measuring face micro motion. It uses the open source vision library, opencv to process video streams
 
 ## Pre-requisites (Mac Laptop)
 1. Python 3 installed (3.7 version minimum)
@@ -20,6 +20,9 @@ This project estimates pulse rate from a video stream by measuring face micro mo
     1. `pip install opencv-contrib-python`
     2. `pip install matplotlib`
     3. `pip install scipy`
+6. Locate the opencv face classifier *haarcascade_frontalface_default.xml* and copy it to the data folder. (Different distros of opencv install this in different places)  
+    1. `mkdir data`
+    2. `cp /....../cv2/data/haarcascade_frontalface_default.xml data/`  
     
 ### For the raspberry pi do the additional:
 1.`sudo apt-get install at-spi2-core` (remove errors about “org.freedesktop.DBus.Error)
@@ -28,31 +31,8 @@ This project estimates pulse rate from a video stream by measuring face micro mo
     
     
 ## Usage
-To verify the installation and camera: `python play_video.py` 
-python3 -m venv venv (Make su
-re python3 is used, not python2)
-source venv/bin/activate
+1. To verify the installation and camera: `python play_video.py` Verify that video streams and that the camera is correctly positioned for face detection.
 
-3) Install python packages into the virtual environment
-pip install opencv-contrib-python #(Note that this instead of opencv-python)
-pip install matplotlib
-pip install scipy
+2. To measure pulse rate run `python main.py`. When a face is detected, a 'green' rectangle will enclose the face and after about 10 seconds the pulse rate will be displayed over the video if it can be estimated.
 
-
-On the raspberryPi 
-
-install at-spi2-core to remove errors about “org.freedesktop.DBus.Error…. using apt-get
-sudo apt-get install at-spi2-core
-pip install picamera
-
-
-to verify installation
-python play_video.py
-
-config. OpenCV  face classifier
-
-To do this, create a new folder 'data', locate the opencv classifier 'haarcascade_frontalface_default.xml', and
-copy it to the data folder. Eg
-
-cp ...python3.7/site-packages/cv2/data/haarcascade_frontalface_default.xml data/
-
+## Options
