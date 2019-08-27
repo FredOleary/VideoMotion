@@ -8,9 +8,9 @@ class MotionCharts:
 
     def initialize_charts(self):
         self.charts = {"X": self.create_time_chart('X'),
-                       "Y": self.create_time_chart('Y'),
-                       "W": self.create_time_chart('W'),
-                       "H": self.create_time_chart('H')
+                       "Y": self.create_time_chart('Y')
+                       # "W": self.create_time_chart('W'),
+                       # "H": self.create_time_chart('H')
                        }
 
     def initialize_time_test_chart(self, test):
@@ -42,7 +42,7 @@ class MotionCharts:
                                                              'ro', ms=3, label='positive peaks',
                                                              color=(0.0, 0.0, 1.0))
             except IndexError:
-                print("charting error")
+                print("charting error " + data['dimension'])
         else:
             self.charts[data['dimension']]["fig"].suptitle(data['dimension'] + " Dimension BPM - Not available"
                                                            , fontsize=14)

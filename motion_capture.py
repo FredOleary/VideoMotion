@@ -224,8 +224,8 @@ class MotionCapture:
                 print("processing motion")
                 enqueue_dimension('X', self.config)
                 enqueue_dimension('Y', self.config)
-                enqueue_dimension('W', self.config)
-                enqueue_dimension('H', self.config)
+                # enqueue_dimension('W', self.config)
+                # enqueue_dimension('H', self.config)
                 q.task_done()
 
     @staticmethod
