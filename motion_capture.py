@@ -87,8 +87,6 @@ class MotionCapture:
             print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
                + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
 
-            self.tracker = cv2.TrackerKCF_create()
-
             self.initialize_frame()
 
         frame_count = 0
@@ -109,6 +107,7 @@ class MotionCapture:
                         if self.config['use_tracking_after_detect']:
                             print("Tracking after face detect")
                             tracking = True
+                            self.tracker = cv2.TrackerKCF_create()
                             self.tracker.init(frame, track_box)
                     else:
                         self.motion_processor.add_no_motion()
