@@ -1,9 +1,36 @@
-# VideoMotion
+# Measuring pulse rate by analysing micro changes in head positioning
+This project estimates pulse rate from a video stream by measuring face micro motion
 
-todo
-1) Get source from git. clone/fork
-2) create venv
-python3 -m venv venv (Make sure python3 is used, not python2)
+##Pre-requisites (Mac Laptop)
+1. Python 3 installed (3.7 version minimum)
+2. Webcam
+
+##Pre-requisites RaspberryPi
+1. Raspberry Pi 3b+
+2. Raspberry Pi camera. (picamera) (USB cameras are not supported )
+3. Python 3 installed (3.5 version minimum)
+
+
+##Software installation steps
+1. Clone this repositary to a local directory
+2. `cd VideoMotion`
+3. `python3 -m venv venv`  (Create a virtual environment)
+4. `source venv/bin/activate` (Activate virtual environment)
+5. Install the following python packages
+    1. `pip install opencv-contrib-python`
+    2. `pip install matplotlib`
+    3. `pip install scipy`
+    
+### For the raspberry pi do the additional:
+1.`sudo apt-get install at-spi2-core` (remove errors about “org.freedesktop.DBus.Error)
+
+2.`pip install picamera`
+    
+    
+##Usage
+To verify the installation and camera: `python play_video.py` 
+python3 -m venv venv (Make su
+re python3 is used, not python2)
 source venv/bin/activate
 
 3) Install python packages into the virtual environment
