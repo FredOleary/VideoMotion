@@ -188,8 +188,9 @@ class MotionCapture:
                 enqueue_dimension('H', self.config)
                 q.task_done()
 
-    def create_camera(self, video_file_or_camera, fps, width, height):
-        # For files nor non raspberry pi devices, use open cv, for realtime video on raspberry pi, use CameraRaspbian
+    @staticmethod
+    def create_camera(video_file_or_camera, fps, width, height):
+        # For files nor non raspberry pi devices, use open cv, for real-time video on raspberry pi, use CameraRaspbian
         if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0:
             return CameraRaspbian(fps, width, height)
         else:

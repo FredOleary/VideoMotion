@@ -2,8 +2,11 @@ import time
 from threading import Thread
 
 try:
+    # noinspection PyUnresolvedReferences
     from picamera.array import PiRGBArray
+    # noinspection PyUnresolvedReferences
     from picamera import PiCamera
+    # noinspection PyUnresolvedReferences
     from picamera import PiCameraMMALError
 except ImportError:
     print("Not raspberry Pi")
@@ -12,7 +15,8 @@ except ImportError:
 class CameraRaspbian:
 
     def __init__(self, fps, width, height):
-        print("CameraRaspberian camera created")
+        print("CameraRaspbian camera created")
+        self.camera = None
         self.fps = fps
         self.width = width
         self.height = height
@@ -22,6 +26,7 @@ class CameraRaspbian:
         self.rawCapture = None
         self.frame = None
 
+    # noinspection PyUnusedLocal
     def open_video(self, video_file_or_camera):
         try:
             self.camera = PiCamera()
@@ -36,12 +41,12 @@ class CameraRaspbian:
 
             self.frame = None
             self.stopped = False
-            # allow the camera to warmup
+            # allow the camera to warm up
             time.sleep(0.3)
             self.is_open = True
             return True
         except PiCameraMMALError:
-            print("CameraRaspberian - open camera failed")
+            print("CameraRaspbian - open camera failed")
             self.is_open = False
             return False
 
