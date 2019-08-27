@@ -43,8 +43,8 @@ class MotionCapture:
         else:
             return False
 
-    def queue_results(self):
-        motion = {"verb": 'process', "mp": self.motion_processor, "response_queue": self.response_queue}
+    def queue_results(self, fps):
+        motion = {"verb": 'process', "mp": self.motion_processor, "response_queue": self.response_queue, "fps":fps}
         self.send_queue.put(motion)
 
     def check_response(self):
@@ -127,7 +127,7 @@ class MotionCapture:
                 cv2.imshow('Video', frame)
 
                 if self.check_frame():
-                    self.queue_results()
+                    self.queue_results(video.get_frame_rate())
                     self.initialize_frame()
                 else:
                     self.check_response()
@@ -184,7 +184,7 @@ class MotionCapture:
                 cv2.imshow('Frame', frame)
 
                 if self.check_frame():
-                    self.queue_results()
+                    self.queue_results(video.get_frame_rate())
                     self.initialize_frame()
                     tracking = False
                 else:
@@ -203,7 +203,7 @@ class MotionCapture:
             # x_time, y_amplitude,  x_frequency, y_frequency = \
             #    mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
             beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
-                dimension, config["video_fps"], config["low_pulse_bpm"], config["high_pulse_bpm"])
+                dimension, motion['fps'], config["low_pulse_bpm"], config["high_pulse_bpm"])
             print("beats_per_minute: ", beats_per_minute)
             motion["response_queue"].put({
                 "beats_per_minute": beats_per_minute,
