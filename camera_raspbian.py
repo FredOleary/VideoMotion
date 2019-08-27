@@ -79,15 +79,19 @@ class CameraRaspbian:
         return self.is_open
 
     def update(self):
+        start_time = time.time()
+        frame_count = 0
         for f in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
+            frame_count += 1
             self.frame = f.array
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
+                print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time)),2))
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()
