@@ -91,7 +91,7 @@ class CameraRaspbian:
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
-                print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time)),2))
+                print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()

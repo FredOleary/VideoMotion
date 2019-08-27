@@ -66,7 +66,6 @@ class MotionCapture:
     def capture(self, video_file_or_camera):
         print("MotionCapture:capture")
 
-        face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
 
         if video_file_or_camera is None:
             video_file_or_camera = 0  # First camera
@@ -89,22 +88,74 @@ class MotionCapture:
 
             self.initialize_frame()
 
-        frame_count = 0
         start_capture_time = time.time()
-        tracking = False
+        if self.config['use_tracking_after_detect']:
+            frame_count = self.process_face_detect_then_track(video)
+        else:
+            frame_count = self.process_face_per_frame(video)
+
+        end_capture_time = time.time()
+        print("Elapsed time: " + str(round(end_capture_time - start_capture_time,2)) + " seconds. fps:" + str(
+            round(frame_count / (end_capture_time - start_capture_time), 2)) + ". Frame count: " + str(frame_count))
+        cv2.destroyWindow('Frame')
+        # When everything done, release the video capture object
+        video.close_video()
+
+        end = {"verb":'done'}
+        self.send_queue.put(end)
+        self.send_queue.join()
+        input("Hit Enter to exit")
+
+    def process_face_per_frame(self, video):
+        frame_count = 0
+        face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
-                frame_count = frame_count+1
-                if not self.config['use_tracking_after_detect'] or not tracking:
+                frame_count +=1
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+                if len(faces) == 1:
+                    for (x, y, w, h) in faces:
+                        self.motion_processor.add_motion_rectangle(x, y, w, h)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                else:
+                    self.motion_processor.add_no_motion()
+
+                cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm + " Frame: " +str(frame_count),
+                            (30,30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                cv2.imshow('Video', frame)
+
+                if self.check_frame():
+                    self.queue_results()
+                    self.initialize_frame()
+                else:
+                    self.check_response()
+
+                # Press Q on keyboard to  exit
+                if cv2.waitKey(10) & 0xFF == ord('q'):
+                    break
+            else:
+                break
+        return frame_count
+
+    def process_face_detect_then_track(self, video):
+        frame_count = 0
+        tracking = False
+        face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
+
+        while video.is_opened():
+            ret, frame = video.read_frame()
+            if ret:
+                frame_count +=1
+                if not tracking:
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                     if len(faces) == 1:
                         for (x, y, w, h) in faces:
                             self.motion_processor.add_motion_rectangle(x, y, w, h)
                             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                        track_box = (x, y, w, h)
-                        if self.config['use_tracking_after_detect']:
+                            track_box = (x, y, w, h)
                             print("Tracking after face detect")
                             tracking = True
                             self.tracker = cv2.TrackerKCF_create()
@@ -128,8 +179,8 @@ class MotionCapture:
                         self.initialize_frame()
                         tracking = False
 
-                cv2.putText(frame, "Pulse rate (BPM): "+ self.pulse_rate_bpm + " Frame: " +str(frame_count),
-                            (30,30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                cv2.putText(frame, "Pulse rate (BPM): " + self.pulse_rate_bpm + " Frame: " + str(frame_count),
+                            (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
                 cv2.imshow('Frame', frame)
 
                 if self.check_frame():
@@ -144,18 +195,7 @@ class MotionCapture:
                     break
             else:
                 break
-
-        end_capture_time = time.time()
-        print("Elapsed time: " + str(round(end_capture_time - start_capture_time,2)) + " seconds. fps:" + str(
-            round(frame_count / (end_capture_time - start_capture_time), 2)) + ". Frame count: " + str(frame_count))
-        cv2.destroyWindow('Frame')
-        # When everything done, release the video capture object
-        video.close_video()
-
-        end = {"verb":'done'}
-        self.send_queue.put(end)
-        self.send_queue.join()
-        input("Hit Enter to exit")
+        return frame_count
 
     def process(self, q):
         def enqueue_dimension(dimension, config):
