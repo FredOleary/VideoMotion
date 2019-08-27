@@ -36,3 +36,15 @@ This project estimates pulse rate from a video stream by measuring face micro mo
 2. To measure pulse rate run `python main.py`. When a face is detected, a 'green' rectangle will enclose the face and after about 10 seconds the pulse rate will be displayed over the video if it can be estimated.
 
 ## Options
+The configuration file config.txt contains the following options. (Note this is organized as a python dictionary)
+
+1. **low_pulse_bpm** - Low end of pulse rate, (beats-per-minute)
+2. **high_pulse_bpm** - Low end of pulse rate, (beats-per-minute)
+3. **video_fps** - Preferred video frame rate. (Not all cameras will honor this)
+4. **resolution** - Video resolution
+5. **pulse_sample_seconds** - Length of interval used to measure pulse rate. E.g. if 10 then pulse rate will be updated every 10 seconds
+6. **show_pulse_charts** - When `True` charts of the head motion will show: 
+    1. The raw changes in head motion over time
+    2. The filtered changes in head motion over time using **low_pulse_bpm/high_pulse_bpm**
+    3. The FFT of the filtered changes
+7. **use_tracking_after_detect** When `True`, the algorithm uses face detection followed by face tracking to measure motion. When `False` Face detection per frame is used. (Face detection per frame is less efficient)
