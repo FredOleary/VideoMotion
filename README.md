@@ -1,4 +1,4 @@
-# Measuring pulse rate by analysing micro changes in head positioning
+# Measuring pulse rate by analysing micro changes in head motion
 This project estimates pulse rate from a video stream by measuring face micro motion
 
 ##Pre-requisites (Mac Laptop)
