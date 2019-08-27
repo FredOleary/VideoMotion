@@ -25,4 +25,5 @@ venv/
 
 data/
 
+scratch_stuff/
 *.pyc
