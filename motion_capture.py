@@ -127,7 +127,7 @@ class MotionCapture:
                 cv2.imshow('Video', frame)
 
                 if self.check_frame():
-                    self.queue_results(video.get_frame_rate())
+                    self.queue_results(frame_count/(time.time()-start_time))
                     self.initialize_frame()
                 else:
                     self.check_response()
@@ -143,7 +143,7 @@ class MotionCapture:
         frame_count = 0
         tracking = False
         face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
-
+        start_time = time.time()
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
@@ -184,7 +184,7 @@ class MotionCapture:
                 cv2.imshow('Frame', frame)
 
                 if self.check_frame():
-                    self.queue_results(video.get_frame_rate())
+                    self.queue_results(frame_count/(time.time()-start_time))
                     self.initialize_frame()
                     tracking = False
                 else:
