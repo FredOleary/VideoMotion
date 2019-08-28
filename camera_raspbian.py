@@ -1,5 +1,6 @@
 import time
 from threading import Thread
+import queue
 
 try:
     # noinspection PyUnresolvedReferences
@@ -24,7 +25,9 @@ class CameraRaspbian:
         self.stream = None
         self.stopped = False
         self.rawCapture = None
-        self.frame = None
+        self.paused = False
+        self.result = None
+        self.frame_queue = queue.Queue()
 
     # noinspection PyUnusedLocal
     def open_video(self, video_file_or_camera):
@@ -65,15 +68,23 @@ class CameraRaspbian:
         return width, height
 
     def read_frame(self):
-        if self.stopped:
-            return False, self.frame
+        # see if still running OR there are frames in the queue
+        if self.result or not self.frame_queue.empty():
+            return True, self.frame_queue.get()
         else:
-            return True, self.frame
+            return False, None
 
     def close_video(self):
         self.is_open = False
         self.stopped = True
         return True
+
+    def pause_video(self):
+        self.paused = True
+
+    def resume_video(self):
+        self.frame_queue = queue.Queue()
+        self.paused = False
 
     def is_opened(self):
         return self.is_open
@@ -85,13 +96,15 @@ class CameraRaspbian:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
             frame_count += 1
-            self.frame = f.array
+            self.result = True
+            self.frame_queue.put(f.array)
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
                 print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
+                self.result =False
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()

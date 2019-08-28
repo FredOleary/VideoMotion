@@ -32,10 +32,11 @@ class MotionCapture:
         self.pulse_rate_bpm = "Not available"
         self.tracker = None
 
-    def initialize_frame(self):
+    def initialize_frame(self, video):
         self.motion_processor = MotionProcessor()
         self.motion_processor.initialize()
         self.start_sample_time = time.time()
+        video.resume_video()
 
     def check_frame(self):
         if (time.time() - self.start_sample_time) > self.config["pulse_sample_seconds"]:
@@ -86,7 +87,7 @@ class MotionCapture:
             print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
                + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
 
-            self.initialize_frame()
+            self.initialize_frame(video)
 
         start_capture_time = time.time()
         if self.config['use_tracking_after_detect']:
@@ -127,8 +128,9 @@ class MotionCapture:
                 cv2.imshow('Video', frame)
 
                 if self.check_frame():
+                    video.pause_video()
                     self.queue_results(frame_count/(time.time()-start_time))
-                    self.initialize_frame()
+                    self.initialize_frame(video)
                 else:
                     self.check_response()
 
@@ -176,7 +178,7 @@ class MotionCapture:
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                     else:
                         print("Tracker failed")
-                        self.initialize_frame()
+                        self.initialize_frame(video)
                         tracking = False
 
                 cv2.putText(frame, "Pulse rate (BPM): " + self.pulse_rate_bpm + " Frame: " + str(frame_count),
@@ -184,8 +186,9 @@ class MotionCapture:
                 cv2.imshow('Frame', frame)
 
                 if self.check_frame():
+                    video.pause_video()
                     self.queue_results(frame_count/(time.time()-start_time))
-                    self.initialize_frame()
+                    self.initialize_frame(video)
                     tracking = False
                 else:
                     self.check_response()
