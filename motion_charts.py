@@ -18,18 +18,23 @@ class MotionCharts:
 
     @staticmethod
     def create_time_chart(dimension):
-        fig, ax = plt.subplots(2, 1)
+        fig, ax = plt.subplots(3, 1)
         fig.suptitle(dimension + " Dimension " + dimension, fontsize=14)
         ax[0].set_xlabel('Time')
         ax[0].set_ylabel('Amplitude - Unfiltered ' + dimension)
 
         ax[1].set_xlabel('Pulse (BMP) N/A')
         ax[1].set_ylabel('Amplitude - filtered ' + dimension)
+
+        ax[2].set_xlabel('Pulse (BMP)')
+        ax[2].set_ylabel('|Y(BMP)| ' + dimension)
+
         return {"fig": fig, "ax": ax}
 
     def update_time_chart(self, data):
         self.charts[data['dimension']]["ax"][0].clear()
         self.charts[data['dimension']]["ax"][1].clear()
+        self.charts[data['dimension']]["ax"][2].clear()
         if len(data['x_time']) > 0:
             try:
                 self.charts[data['dimension']]["fig"].suptitle(data['dimension'] + " Dimension BPM - " +
@@ -41,6 +46,13 @@ class MotionCharts:
                                                              data['y_amplitude_filtered'][data['peaks_positive']],
                                                              'ro', ms=3, label='positive peaks',
                                                              color=(0.0, 0.0, 1.0))
+                if data['x_frequency'] is not None:
+                    chart_bar_width = (data['x_frequency'][len(data['x_frequency']) - 1] / (
+                                len(data['x_frequency']) * 2)) * 60
+
+                    self.charts[data['dimension']]["ax"][2].bar(data['x_frequency'] * 60, data['y_frequency'],
+                                                                color=(1.0, 0.0, 0.0), width=chart_bar_width)
+
             except IndexError:
                 print("charting error " + data['dimension'])
         else:

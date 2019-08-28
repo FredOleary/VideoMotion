@@ -199,11 +199,18 @@ class MotionCapture:
 
     def process(self, q):
         def enqueue_dimension(dimension, config):
+            x_frequency = None
+            y_frequency = None
             mp = motion['mp']
             # x_time, y_amplitude,  x_frequency, y_frequency = \
             #    mp.fft_filter_motion('X', fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
             beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_motion(
                 dimension, motion['fps'], config["low_pulse_bpm"], config["high_pulse_bpm"])
+            # if a fft isn't required, comment out the line below
+            x_temp, y_temp,  x_frequency, y_frequency = mp.fft_filter_series(y_amplitude_filtered, motion['fps'], 'X',
+                                                                             self.config["low_pulse_bpm"],
+                                                                             self.config["high_pulse_bpm"])
+
             print("beats_per_minute: ", beats_per_minute)
             motion["response_queue"].put({
                 "beats_per_minute": beats_per_minute,
@@ -211,6 +218,8 @@ class MotionCapture:
                 "y_amplitude": y_amplitude,
                 "y_amplitude_filtered": y_amplitude_filtered,
                 "peaks_positive": peaks_positive,
+                "x_frequency": x_frequency,
+                "y_frequency": y_frequency,
                 "dimension": dimension
             })
 
