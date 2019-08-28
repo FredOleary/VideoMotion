@@ -42,18 +42,24 @@ class CameraOpenCv:
         return width, height
 
     def read_frame(self):
-        if self.result:
+        if not self.frame_queue.empty():            # Frame is available
             return True, self.frame_queue.get()
-        else:
+        elif not self.result:                       # Video has ended
             return False, None
+        elif self.paused:                           # Video is paused
+            return True, None
+        else:
+            return True, self.frame_queue.get()     # Block until next frame is delivered
 
     def close_video(self):
         self.stopped = True
 
     def pause_video(self):
+        print("-----------Video paused")
         self.paused = True
 
     def resume_video(self):
+        print("-----------Video resumed")
         self.frame_queue = queue.Queue()
         self.paused = False
 
@@ -66,7 +72,7 @@ class CameraOpenCv:
         while not self.stopped:
             ret, frame = self.capture.read()
             self.result = ret
-            if ret:
+            if ret and not self.paused:
                 self.frame_queue.put(frame)
             frame_count += 1
         if self.stopped:

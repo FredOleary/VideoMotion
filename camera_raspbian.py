@@ -68,11 +68,17 @@ class CameraRaspbian:
         return width, height
 
     def read_frame(self):
-        # see if still running OR there are frames in the queue
-        if self.result or not self.frame_queue.empty():
+        if not self.frame_queue.empty():            # Frame is available
             return True, self.frame_queue.get()
-        else:
+        elif not self.result:                       # Video has ended
             return False, None
+        elif self.paused:                           # Video is paused
+            return True, None
+        else:
+            return True, self.frame_queue.get()     # Block until next frame is delivered
+
+
+
 
     def close_video(self):
         self.is_open = False

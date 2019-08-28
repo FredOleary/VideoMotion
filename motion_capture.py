@@ -149,50 +149,52 @@ class MotionCapture:
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
-                frame_count +=1
-                if not tracking:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-                    if len(faces) == 1:
-                        for (x, y, w, h) in faces:
+                if frame is not None:
+                    frame_count +=1
+                    if not tracking:
+                        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+                        if len(faces) == 1:
+                            for (x, y, w, h) in faces:
+                                self.motion_processor.add_motion_rectangle(x, y, w, h)
+                                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                                track_box = (x, y, w, h)
+                                print("Tracking after face detect")
+                                tracking = True
+                                self.tracker = cv2.TrackerKCF_create()
+                                self.tracker.init(frame, track_box)
+                        else:
+                            self.motion_processor.add_no_motion()
+
+                    else:
+                        # Update tracker
+                        ok, bbox = self.tracker.update(frame)
+                        if ok:
+                            # print("Tracker succeeded")
+                            x = int(bbox[0])
+                            y = int(bbox[1])
+                            w = int(bbox[2])
+                            h = int(bbox[3])
                             self.motion_processor.add_motion_rectangle(x, y, w, h)
                             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                            track_box = (x, y, w, h)
-                            print("Tracking after face detect")
-                            tracking = True
-                            self.tracker = cv2.TrackerKCF_create()
-                            self.tracker.init(frame, track_box)
-                    else:
-                        self.motion_processor.add_no_motion()
+                        else:
+                            print("Tracker failed")
+                            self.initialize_frame(video)
+                            tracking = False
 
-                else:
-                    # Update tracker
-                    ok, bbox = self.tracker.update(frame)
-                    if ok:
-                        # print("Tracker succeeded")
-                        x = int(bbox[0])
-                        y = int(bbox[1])
-                        w = int(bbox[2])
-                        h = int(bbox[3])
-                        self.motion_processor.add_motion_rectangle(x, y, w, h)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                    else:
-                        print("Tracker failed")
+                    cv2.putText(frame, "Pulse rate (BPM): " + self.pulse_rate_bpm + " Frame: " + str(frame_count),
+                                (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                    cv2.imshow('Frame', frame)
+
+                    if self.check_frame():
+                        video.pause_video()
+                        self.queue_results(frame_count/(time.time()-start_time))
                         self.initialize_frame(video)
                         tracking = False
-
-                cv2.putText(frame, "Pulse rate (BPM): " + self.pulse_rate_bpm + " Frame: " + str(frame_count),
-                            (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
-                cv2.imshow('Frame', frame)
-
-                if self.check_frame():
-                    video.pause_video()
-                    self.queue_results(frame_count/(time.time()-start_time))
-                    self.initialize_frame(video)
-                    tracking = False
+                    else:
+                        self.check_response(video)
                 else:
                     self.check_response(video)
-
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(10) & 0xFF == ord('q'):
                     break
