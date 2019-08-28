@@ -31,9 +31,9 @@ This project estimates pulse rate from a video stream by measuring face micro mo
     
     
 ## Usage
-1. To verify the installation and camera: `python play_video.py` Verify that video streams and that the camera is correctly positioned for face detection.
+1. To verify the installation and camera: `python play_video.py` Verify that video streams and that the camera is correctly positioned for face detection. To exit, move focus to the video window and press 'q'.
 
-2. To measure pulse rate run `python main.py`. When a face is detected, a 'green' rectangle will enclose the face and after about 10 seconds the pulse rate will be displayed over the video if it can be estimated.
+2. To measure pulse rate run `python main.py`. When a face is detected, a 'green' rectangle will enclose the face and after about 10 seconds the pulse rate will be displayed over the video if it can be estimated. To exit, move focus to the video window and press 'q', then press <Enter>
 
 ## Options
 The configuration file config.txt contains the following options. (Note this is organized as a python dictionary)
