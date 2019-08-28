@@ -36,7 +36,6 @@ class MotionCapture:
         self.motion_processor = MotionProcessor()
         self.motion_processor.initialize()
         self.start_sample_time = time.time()
-        video.resume_video()
 
     def check_frame(self):
         if (time.time() - self.start_sample_time) > self.config["pulse_sample_seconds"]:
@@ -48,7 +47,7 @@ class MotionCapture:
         motion = {"verb": 'process', "mp": self.motion_processor, "response_queue": self.response_queue, "fps":fps}
         self.send_queue.put(motion)
 
-    def check_response(self):
+    def check_response(self, video):
         try:
             response = self.response_queue.get_nowait()
             if response["dimension"] == 'X':
@@ -59,6 +58,7 @@ class MotionCapture:
 
             if self.config["show_pulse_charts"] is True:
                 self.motion_charts.update_time_chart(response)
+            video.resume_video()
             return True
         except queue.Empty:
             return False
@@ -132,7 +132,7 @@ class MotionCapture:
                     self.queue_results(frame_count/(time.time()-start_time))
                     self.initialize_frame(video)
                 else:
-                    self.check_response()
+                    self.check_response(video)
 
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -191,7 +191,7 @@ class MotionCapture:
                     self.initialize_frame(video)
                     tracking = False
                 else:
-                    self.check_response()
+                    self.check_response(video)
 
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(10) & 0xFF == ord('q'):
