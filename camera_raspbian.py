@@ -80,9 +80,11 @@ class CameraRaspbian:
         return True
 
     def pause_video(self):
+        print("-----------Video paused")
         self.paused = True
 
     def resume_video(self):
+        print("-----------Video resumed")
         self.frame_queue = queue.Queue()
         self.paused = False
 
@@ -97,7 +99,8 @@ class CameraRaspbian:
             # preparation for the next frame
             frame_count += 1
             self.result = True
-            self.frame_queue.put(f.array)
+            if not self.paused:
+                self.frame_queue.put(f.array)
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
