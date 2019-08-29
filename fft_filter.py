@@ -35,10 +35,10 @@ class FFTFilter:
         y_time = np.array(series)
 
         # persist to file for post processing
-        scipy.io.savemat('Pulse_time series_' + dimension, {
-            'x': x_time,
-            'y': y_time
-        })
+        # scipy.io.savemat('Pulse_time series_' + dimension, {
+        #     'x': x_time,
+        #     'y': y_time
+        # })
 
         number_of_samples = len(y_time)  # length of the signal
         if number_of_samples > 0:

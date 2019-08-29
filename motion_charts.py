@@ -46,7 +46,7 @@ class MotionCharts:
                                                              data['y_amplitude_filtered'][data['peaks_positive']],
                                                              'ro', ms=3, label='positive peaks',
                                                              color=(0.0, 0.0, 1.0))
-                if data['x_frequency'] is not None:
+                if 'x_frequency' in data and data['x_frequency'] is not None:
                     chart_bar_width = (data['x_frequency'][len(data['x_frequency']) - 1] / (
                                 len(data['x_frequency']) * 2)) * 60
 

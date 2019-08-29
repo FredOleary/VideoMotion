@@ -51,15 +51,11 @@ class MotionCapture:
             print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
                + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
 
-        start_capture_time = time.time()
         if self.config['use_tracking_after_detect']:
-            frame_count = self.process_face_detect_then_track(video)
+            self.process_face_detect_then_track(video)
         else:
-            frame_count = self.process_face_per_frame(video)
+            self.process_face_per_frame(video)
 
-        end_capture_time = time.time()
-        print("Elapsed time: " + str(round(end_capture_time - start_capture_time,2)) + " seconds. Frames/second:" + str(
-            round(frame_count / (end_capture_time - start_capture_time), 2)) + ". Frame count: " + str(frame_count))
         cv2.destroyWindow('Frame')
         # When everything done, release the video capture object
         video.close_video()
@@ -70,7 +66,8 @@ class MotionCapture:
         self.motion_processor = MotionProcessor()
         self.motion_processor.initialize()
         self.frame_number = 0
-        video.start_capture(305)
+        self.start_process_time = time.time()
+        video.start_capture(self.config["pulse_sample_frames"] +5)
 
     def process_face_detect_then_track(self, video):
         frame_count = 0
@@ -122,10 +119,16 @@ class MotionCapture:
                             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
                 cv2.imshow('Frame', frame)
 
-                if self.frame_number > 300:
+                if self.frame_number > self.config["pulse_sample_frames"]:
                     self.update_results( video.get_frame_rate())
                     tracking = False
+                    print("Processing time: " + str( round(time.time() - self.start_process_time, 2)) +
+                          " seconds. Frames/second:" +
+                          str(round(frame_count /(time.time() - self.start_process_time), 2)) +
+                          ". Frame count: " + str( frame_count))
+
                     input("Hit enter to continue")
+                    frame_count = 0
                     self.start_capture(video)
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(10) & 0xFF == ord('q'):
