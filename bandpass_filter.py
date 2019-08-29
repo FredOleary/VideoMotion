@@ -46,6 +46,7 @@ class BandPassFilter:
                 per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
                 beats_per_minute = 1/per_beat_in_seconds * 60
                 return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
-
+            else:
+                return 0, x_time, y_amplitude, y_amplitude_filtered, x_time
         # return unfiltered results.
         return 0, x_time, y_amplitude, y_amplitude, x_time

@@ -13,6 +13,8 @@ class CameraOpenCv:
         self.stopped = True
         self.paused = True
         self.frame_queue = queue.Queue()
+        self.start_time = time.time()
+        self.total_frame_count = 0
 
     def open_video(self, video_file_or_camera):
         self.capture = self.cv2.VideoCapture(video_file_or_camera)
@@ -34,6 +36,9 @@ class CameraOpenCv:
 
     def get_frame_rate(self):
         return self.capture.get(self.cv2.CAP_PROP_FPS)
+
+    def get_actual_frame_rate(self):
+        return self.total_frame_count/(time.time()-self.start_time)
 
     def get_resolution(self):
         width = self.capture.get(self.cv2.CAP_PROP_FRAME_WIDTH)
@@ -58,12 +63,12 @@ class CameraOpenCv:
         return self.capture.isOpened()
 
     def update(self):
-        start_time = time.time()
-        frame_count = 0
+        self.start_time = time.time()
+        self.total_frame_count = 0
         while not self.stopped:
             ret, frame = self.capture.read()
             if ret:
-                frame_count += 1
+                self.total_frame_count += 1
                 if not self.paused:
                     self.frame_queue.put(frame)
                     self.frame_number +=1
@@ -72,6 +77,6 @@ class CameraOpenCv:
             else:
                 self.stopped = True
 
-        print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
+        print("Frame Count: " + str(self.total_frame_count) + ". FPS: " + str(round(self.total_frame_count/(time.time()-self.start_time),2)))
         self.capture.release()
         return

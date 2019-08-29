@@ -34,7 +34,8 @@ class MotionCapture:
         if video_file_or_camera is None:
             video_file_or_camera = 0  # First camera
 
-        video = self.create_camera(video_file_or_camera, self.config["video_fps"], self.config["resolution"]["width"],
+        video = self.create_camera(video_file_or_camera, self.config["video_fps"],
+                                   self.config["resolution"]["width"],
                                    self.config["resolution"]["height"])
 
         is_opened = video.open_video(video_file_or_camera)
@@ -86,6 +87,11 @@ class MotionCapture:
                     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                     if len(faces) == 1:
                         for (x, y, w, h) in faces:
+                            #inset rect to capture points in face, empirical
+                            x += int(w/4)
+                            w = int(w/2)
+                            y += int(h/4)
+                            h = int(h/2)
                             self.motion_processor.add_motion_rectangle(x, y, w, h)
                             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                             track_box = (x, y, w, h)
@@ -119,6 +125,7 @@ class MotionCapture:
                 if self.frame_number > 300:
                     self.update_results( video.get_frame_rate())
                     tracking = False
+                    input("Hit enter to continue")
                     self.start_capture(video)
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(10) & 0xFF == ord('q'):

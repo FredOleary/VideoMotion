@@ -27,6 +27,8 @@ class CameraRaspbian:
         self.rawCapture = None
         self.paused = True
         self.frame_queue = queue.Queue()
+        self.start_time = time.time()
+        self.total_frame_count = 0
 
     # noinspection PyUnusedLocal
     def open_video(self, video_file_or_camera):
@@ -85,12 +87,12 @@ class CameraRaspbian:
         return self.is_open
 
     def update(self):
-        start_time = time.time()
-        frame_count = 0
+        self.start_time = time.time()
+        self.total_frame_count = 0
         for f in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
-            frame_count += 1
+            self.total_frame_count += 1
             if not self.paused:
                 self.frame_queue.put(f.array)
                 self.frame_number += 1
@@ -101,7 +103,7 @@ class CameraRaspbian:
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
-                print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
+                print("Frame Count: " + str(self.total_frame_count) + ". FPS: " + str(round(self.total_frame_count/(time.time()-self.start_time),2)))
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()
