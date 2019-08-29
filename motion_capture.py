@@ -135,7 +135,7 @@ class MotionCapture:
                     break
             else:
                 break
-        return frame_count
+        return
 
     def update_results(self, fps):
         self.update_dimension('X', fps)

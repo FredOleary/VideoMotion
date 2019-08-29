@@ -14,7 +14,9 @@ class CameraOpenCv:
         self.paused = True
         self.frame_queue = queue.Queue()
         self.start_time = time.time()
+        self.end_time = time.time() +1
         self.total_frame_count = 0
+        self.video_ended = False
 
     def open_video(self, video_file_or_camera):
         self.capture = self.cv2.VideoCapture(video_file_or_camera)
@@ -49,6 +51,8 @@ class CameraOpenCv:
         return True, self.frame_queue.get()     # Block until next frame is delivered
 
     def close_video(self):
+        if not self.video_ended:
+            self.end_time = time.time()
         self.stopped = True
 
     def start_capture(self, number_of_frames):
@@ -75,8 +79,13 @@ class CameraOpenCv:
                     if self.frame_number > self.number_of_frames:
                         self.paused = True
             else:
-                self.stopped = True
+                if not self.video_ended:
+                    self.video_ended = True
+                    self.end_time = time.time()
+                if not self.paused:
+                    self.stopped = True
 
-        print("Frame Count: " + str(self.total_frame_count) + ". FPS: " + str(round(self.total_frame_count/(time.time()-self.start_time),2)))
+        print("Frame Count: " + str(self.total_frame_count) + ". FPS: " +
+              str(round(self.total_frame_count/(self.end_time-self.start_time),2)))
         self.capture.release()
         return
