@@ -11,8 +11,7 @@ class CameraOpenCv:
         self.height = height
         self.capture = None
         self.stopped = True
-        self.paused = False
-        self.result = False
+        self.paused = True
         self.frame_queue = queue.Queue()
 
     def open_video(self, video_file_or_camera):
@@ -42,26 +41,18 @@ class CameraOpenCv:
         return width, height
 
     def read_frame(self):
-        if not self.frame_queue.empty():            # Frame is available
-            return True, self.frame_queue.get()
-        elif not self.result:                       # Video has ended
-            return False, None
-        elif self.paused:                           # Video is paused
-            return True, None
-        else:
-            return True, self.frame_queue.get()     # Block until next frame is delivered
+        return True, self.frame_queue.get()     # Block until next frame is delivered
 
     def close_video(self):
         self.stopped = True
 
-    def pause_video(self):
-        print("-----------Video paused")
-        self.paused = True
-
-    def resume_video(self):
-        print("-----------Video resumed")
+    def start_capture(self, number_of_frames):
+        print("-----------start_capture")
         self.frame_queue = queue.Queue()
+        self.frame_number = 0
+        self.number_of_frames = number_of_frames
         self.paused = False
+
 
     def is_opened(self):
         return self.capture.isOpened()
@@ -71,11 +62,16 @@ class CameraOpenCv:
         frame_count = 0
         while not self.stopped:
             ret, frame = self.capture.read()
-            self.result = ret
-            if ret and not self.paused:
-                self.frame_queue.put(frame)
-            frame_count += 1
-        if self.stopped:
-            print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
-            self.capture.release()
-            return
+            if ret:
+                frame_count += 1
+                if not self.paused:
+                    self.frame_queue.put(frame)
+                    self.frame_number +=1
+                    if self.frame_number > self.number_of_frames:
+                        self.paused = True
+            else:
+                self.stopped = True
+
+        print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
+        self.capture.release()
+        return
