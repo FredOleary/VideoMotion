@@ -28,6 +28,7 @@ class MotionCapture:
             self.motion_charts.initialize_charts()
 
     def capture(self, video_file_or_camera: str):
+        """Open video file or start camera. Then start processing frames for motion"""
         print("MotionCapture:capture")
 
         if video_file_or_camera is None:
@@ -60,6 +61,7 @@ class MotionCapture:
         input("Hit Enter to exit")
 
     def start_capture(self, video):
+        """Start streaming the video file or camera"""
         self.motion_processor = MotionProcessor()
         self.motion_processor.initialize()
         self.frame_number = 0
@@ -67,6 +69,8 @@ class MotionCapture:
         video.start_capture(self.config["pulse_sample_frames"] + 5)
 
     def process_feature_detect_then_track(self, video):
+        """Read video frame by frame and collect changes to the identified features. After sufficient
+        frames have been collect, analyse the results"""
         frame_count = 0
         tracking = False
         face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
@@ -148,10 +152,11 @@ class MotionCapture:
         return
 
     def update_results(self, fps):
-        self.update_dimension('X', fps)
-        self.update_dimension('Y', fps)
+        """Process the the inter-fame changes, and filter results in both time and frequency domain """
+        self.__update_dimension('X', fps)
+        self.__update_dimension('Y', fps)
 
-    def update_dimension(self, dimension, fps):
+    def __update_dimension(self, dimension, fps):
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = \
             self.motion_processor.time_filter_motion(
                 dimension, fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
@@ -179,6 +184,7 @@ class MotionCapture:
 
     @staticmethod
     def create_camera(video_file_or_camera, fps, width, height):
+        """Create the appropriate class using opencv or the raspberry Pi piCamera"""
         # For files nor non raspberry pi devices, use open cv, for real-time video on raspberry pi, use CameraRaspbian
         if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0:
             return CameraRaspbian(fps, width, height)
