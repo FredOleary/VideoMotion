@@ -1,13 +1,6 @@
 import sys
-
+import typing
 from motion_capture import MotionCapture
-
-# VIDEO_FILE_CLIP = "Fred_again.mov"
-# VIDEO_FILE_CLIP = "Fred-110-heart-rate.mov"
-# VIDEO_FILE_CLIP = "Fred-57-heart-rate.mov"
-# VIDEO_FILE_CLIP = "Fred-57-heart-rate-2.mov"
-# VIDEO_FILE_CLIP = "fred_77bpm_30fps.mov"
-VIDEO_FILE_CLIP = None
 
 CONFIG_FILE = "config.txt"
 
@@ -18,14 +11,14 @@ def read_config():
     return dict_from_file
 
 
-def main(args):
-    global VIDEO_FILE_CLIP
+def main(args: typing.List[str]) -> int:
+    """Analyse video file or camera for motion. If no file is entered, the first camera is used."""
+    video_file = None
     config = read_config()
     mc = MotionCapture(config)
     if len(args) > 1:
-        VIDEO_FILE_CLIP = args[1]
-
-    mc.capture(VIDEO_FILE_CLIP)
+        video_file = args[1]
+    mc.capture(video_file)
     return 0
 
 

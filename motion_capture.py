@@ -1,5 +1,3 @@
-import queue
-import threading
 import time
 import os
 
@@ -22,10 +20,12 @@ class MotionCapture:
         self.start_sample_time = None
         self.pulse_rate_bpm = "Not available"
         self.tracker = None
+        self.frame_number = 0
+        self.start_process_time = None
+
         if self.config["show_pulse_charts"] is True:
             self.motion_charts = MotionCharts()
             self.motion_charts.initialize_charts()
-
 
     # noinspection PyPep8
     def capture(self, video_file_or_camera):
@@ -65,7 +65,7 @@ class MotionCapture:
         self.motion_processor.initialize()
         self.frame_number = 0
         self.start_process_time = time.time()
-        video.start_capture(self.config["pulse_sample_frames"] +5)
+        video.start_capture(self.config["pulse_sample_frames"] + 5)
 
     def process_feature_detect_then_track(self, video):
         frame_count = 0
@@ -75,15 +75,15 @@ class MotionCapture:
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
-                frame_count +=1
-                self.frame_number +=1
+                frame_count += 1
+                self.frame_number += 1
                 if not tracking:
                     if self.config['feature_method'] == 'face':
                         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                         if len(faces) == 1:
                             for (x, y, w, h) in faces:
-                                #inset rect to capture points in face, empirical
+                                # inset rect to capture points in face, empirical
                                 x += int(w/4)
                                 w = int(w/2)
                                 y += int(h/4)
@@ -132,14 +132,15 @@ class MotionCapture:
                 cv2.imshow('Frame', frame)
 
                 if self.frame_number > self.config["pulse_sample_frames"]:
-                    self.update_results( video.get_frame_rate())
+                    self.update_results(video.get_frame_rate())
                     tracking = False
-                    print("Processing time: " + str( round(time.time() - self.start_process_time, 2)) +
+                    print("Processing time: " + str(round(time.time() - self.start_process_time, 2)) +
                           " seconds. Frames/second:" +
-                          str(round(frame_count /(time.time() - self.start_process_time), 2)) +
-                          ". Frame count: " + str( frame_count))
+                          str(round(frame_count / (time.time() - self.start_process_time), 2)) +
+                          ". Frame count: " + str(frame_count))
 
-                    input("Hit enter to continue")
+                    if self.config["pause_between_samples"]:
+                        input("Hit enter to continue")
                     frame_count = 0
                     self.start_capture(video)
                 # Press Q on keyboard to  exit
@@ -154,19 +155,17 @@ class MotionCapture:
         self.update_dimension('Y', fps)
 
     def update_dimension(self, dimension, fps):
-        x_frequency = None
-        y_frequency = None
         beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = \
             self.motion_processor.time_filter_motion(
-            dimension, fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
+                dimension, fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
         # if a fft isn't required, comment out the line below
         x_temp, y_temp,  x_frequency, y_frequency = \
             self.motion_processor.fft_filter_series(y_amplitude_filtered, fps, 'X',
                                                     self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
 
-        print( dimension + "-beats_per_minute: ", beats_per_minute)
+        print(dimension + "-beats_per_minute: ", beats_per_minute)
         if dimension == 'X':
-            self.pulse_rate_bpm = str( round(beats_per_minute,2))
+            self.pulse_rate_bpm = str(round(beats_per_minute, 2))
 
         if self.config["show_pulse_charts"] is True:
             chart_data = {
@@ -180,7 +179,6 @@ class MotionCapture:
                 "dimension": dimension
             }
             self.motion_charts.update_time_chart(chart_data)
-
 
     @staticmethod
     def create_camera(video_file_or_camera, fps, width, height):
