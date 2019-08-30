@@ -78,15 +78,17 @@ class CameraOpenCv:
                     self.frame_queue.put(frame)
                     self.frame_number +=1
                     if self.frame_number > self.number_of_frames:
+                        print("CameraOpenCv - pausing")
                         self.paused = True
             else:
                 if not self.video_ended:
                     self.video_ended = True
                     self.end_time = time.time()
                 if not self.paused:
+                    print("CameraOpenCv:Frame Queue size: ", self.frame_queue.qsize())
                     self.stopped = True
 
-        print("Video Ended. Frame Count: " + str(self.total_frame_count) + ". FPS: " +
+        print("CameraOpenCv:Video Ended. Frame Count: " + str(self.total_frame_count) + ". FPS: " +
               str(round(self.total_frame_count/(self.end_time-self.start_time),2)))
         self.capture.release()
         return

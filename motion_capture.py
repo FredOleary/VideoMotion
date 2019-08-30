@@ -147,6 +147,7 @@ class MotionCapture:
                 if cv2.waitKey(10) & 0xFF == ord('q'):
                     break
             else:
+                print("process_feature_detect_then_track: Video stream ended")
                 break
         return
 
