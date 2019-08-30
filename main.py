@@ -6,6 +6,7 @@ CONFIG_FILE = "config.txt"
 
 
 def read_config():
+    """Read the config.txt file. This is formatted as a python dictionary"""
     with open(CONFIG_FILE, 'r') as config:
         dict_from_file = eval(config.read())
     return dict_from_file
