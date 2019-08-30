@@ -40,7 +40,7 @@ class BandPassFilter:
             y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude, low_pulse_bps, high_pulse_bps, fps, order=6)
 
             # find peaks
-            peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.5, threshold=None)
+            peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.2, threshold=None)
             if len(peaks_positive) > 1:
                 time_intervals = np.average(np.diff(peaks_positive))
                 per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]

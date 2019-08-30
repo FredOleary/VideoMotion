@@ -51,6 +51,7 @@ class CameraOpenCv:
         return True, self.frame_queue.get()     # Block until next frame is delivered
 
     def close_video(self):
+        print("close_video - closing video")
         if not self.video_ended:
             self.end_time = time.time()
         self.stopped = True
@@ -85,7 +86,7 @@ class CameraOpenCv:
                 if not self.paused:
                     self.stopped = True
 
-        print("Frame Count: " + str(self.total_frame_count) + ". FPS: " +
+        print("Video Ended. Frame Count: " + str(self.total_frame_count) + ". FPS: " +
               str(round(self.total_frame_count/(self.end_time-self.start_time),2)))
         self.capture.release()
         return

@@ -51,10 +51,8 @@ class MotionCapture:
             print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
                + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
 
-        if self.config['use_tracking_after_detect']:
-            self.process_face_detect_then_track(video)
-        else:
-            self.process_face_per_frame(video)
+
+        self.process_feature_detect_then_track(video)
 
         cv2.destroyWindow('Frame')
         # When everything done, release the video capture object
@@ -69,7 +67,7 @@ class MotionCapture:
         self.start_process_time = time.time()
         video.start_capture(self.config["pulse_sample_frames"] +5)
 
-    def process_face_detect_then_track(self, video):
+    def process_feature_detect_then_track(self, video):
         frame_count = 0
         tracking = False
         face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
@@ -80,24 +78,38 @@ class MotionCapture:
                 frame_count +=1
                 self.frame_number +=1
                 if not tracking:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-                    if len(faces) == 1:
-                        for (x, y, w, h) in faces:
-                            #inset rect to capture points in face, empirical
-                            x += int(w/4)
-                            w = int(w/2)
-                            y += int(h/4)
-                            h = int(h/2)
-                            self.motion_processor.add_motion_rectangle(x, y, w, h)
-                            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                            track_box = (x, y, w, h)
-                            print("Tracking after face detect")
-                            tracking = True
-                            self.tracker = cv2.TrackerKCF_create()
-                            self.tracker.init(frame, track_box)
-                    else:
-                        self.start_capture(video)
+                    if self.config['feature_method'] == 'face':
+                        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+                        if len(faces) == 1:
+                            for (x, y, w, h) in faces:
+                                #inset rect to capture points in face, empirical
+                                x += int(w/4)
+                                w = int(w/2)
+                                y += int(h/4)
+                                h = int(h/2)
+                                self.motion_processor.add_motion_rectangle(x, y, w, h)
+                                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                                track_box = (x, y, w, h)
+                                print("Tracking after face detect")
+                                tracking = True
+                                self.tracker = cv2.TrackerCSRT_create()
+                                self.tracker.init(frame, track_box)
+                        else:
+                            self.start_capture(video)
+                    elif self.config['feature_method'] == 'selectROI':
+                        r = cv2.selectROI(frame)
+                        x = r[0]
+                        y = r[1]
+                        w = r[2]
+                        h = r[3]
+                        self.motion_processor.add_motion_rectangle(x, y, w, h)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                        track_box = (x, y, w, h)
+                        print("Tracking after roi select")
+                        tracking = True
+                        self.tracker = cv2.TrackerCSRT_create()
+                        self.tracker.init(frame, track_box)
 
                 else:
                     # Update tracker
