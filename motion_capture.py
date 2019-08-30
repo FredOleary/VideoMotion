@@ -13,8 +13,8 @@ from motion_charts import MotionCharts
 # noinspection PyUnresolvedReferences
 class MotionCapture:
     def __init__(self, config):
-        print("MotionCapture:__init__ openCV version: " + cv2.__version__)
-        print("Configuration: ", config)
+        print("MotionCapture:__init__ - openCV version: {}".format( cv2.__version__))
+        print("MotionCapture:__init__ - Configuration: ", config)
         self.config = config
         self.motion_processor = None
         self.start_sample_time = None
@@ -27,8 +27,7 @@ class MotionCapture:
             self.motion_charts = MotionCharts()
             self.motion_charts.initialize_charts()
 
-    # noinspection PyPep8
-    def capture(self, video_file_or_camera):
+    def capture(self, video_file_or_camera: str):
         print("MotionCapture:capture")
 
         if video_file_or_camera is None:
@@ -40,7 +39,7 @@ class MotionCapture:
 
         is_opened = video.open_video(video_file_or_camera)
         if not is_opened:
-            print("Error opening video stream or file, '" + video_file_or_camera + "'")
+            print("MotionCapture:capture - Error opening video stream or file, '{}'".format(video_file_or_camera))
         else:
             # Verify/retrieve that setting camera/video properties.
             width, height = video.get_resolution()
@@ -48,14 +47,14 @@ class MotionCapture:
             self.config["resolution"]["height"] = height
             self.config["video_fps"] = video.get_frame_rate()
 
-            print( "Video: Resolution = " + str(self.config["resolution"]["width"]) + " X "
-               + str(self.config["resolution"]["height"]) + ". Frame rate = " + str(round(self.config["video_fps"])))
+            print("MotionCapture.capture - Video: Resolution = {} X {}. Frame rate {}".
+                  format(self.config["resolution"]["width"],
+                         self.config["resolution"]["height"],
+                         round(self.config["video_fps"])))
 
-
-        self.process_feature_detect_then_track(video)
+            self.process_feature_detect_then_track(video)
 
         cv2.destroyWindow('Frame')
-        # When everything done, release the video capture object
         video.close_video()
 
         input("Hit Enter to exit")
@@ -91,7 +90,7 @@ class MotionCapture:
                                 self.motion_processor.add_motion_rectangle(x, y, w, h)
                                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                                 track_box = (x, y, w, h)
-                                print("Tracking after face detect")
+                                print("MotionCapture:process_feature_detect_then_track - Tracking after face detect")
                                 tracking = True
                                 self.tracker = cv2.TrackerCSRT_create()
                                 self.tracker.init(frame, track_box)
@@ -106,7 +105,7 @@ class MotionCapture:
                         self.motion_processor.add_motion_rectangle(x, y, w, h)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                         track_box = (x, y, w, h)
-                        print("Tracking after roi select")
+                        print("MotionCapture:process_feature_detect_then_track - Tracking after roi select")
                         tracking = True
                         self.tracker = cv2.TrackerCSRT_create()
                         self.tracker.init(frame, track_box)
@@ -115,7 +114,6 @@ class MotionCapture:
                     # Update tracker
                     ok, bbox = self.tracker.update(frame)
                     if ok:
-                        # print("Tracker succeeded")
                         x = int(bbox[0])
                         y = int(bbox[1])
                         w = int(bbox[2])
@@ -123,7 +121,7 @@ class MotionCapture:
                         self.motion_processor.add_motion_rectangle(x, y, w, h)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                     else:
-                        print("Tracker failed")
+                        print("MotionCapture:process_feature_detect_then_track - Tracker failed")
                         self.start_capture(video)
                         tracking = False
 
@@ -134,11 +132,9 @@ class MotionCapture:
                 if self.frame_number > self.config["pulse_sample_frames"]:
                     self.update_results(video.get_frame_rate())
                     tracking = False
-                    print("Processing time: " + str(round(time.time() - self.start_process_time, 2)) +
-                          " seconds. Frames/second:" +
-                          str(round(frame_count / (time.time() - self.start_process_time), 2)) +
-                          ". Frame count: " + str(frame_count))
-
+                    print("MotionCapture - Processing time: {} seconds. FPS: {}. Frame count: {}".
+                          format(round(time.time() - self.start_process_time, 2),
+                          round(frame_count / (time.time() - self.start_process_time), 2), frame_count))
                     if self.config["pause_between_samples"]:
                         input("Hit enter to continue")
                     frame_count = 0
@@ -147,7 +143,7 @@ class MotionCapture:
                 if cv2.waitKey(10) & 0xFF == ord('q'):
                     break
             else:
-                print("process_feature_detect_then_track: Video stream ended")
+                print("MotionCapture:process_feature_detect_then_track - Video stream ended")
                 break
         return
 
@@ -164,7 +160,7 @@ class MotionCapture:
             self.motion_processor.fft_filter_series(y_amplitude_filtered, fps, 'X',
                                                     self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
 
-        print(dimension + "-beats_per_minute: ", beats_per_minute)
+        print("MotionCapture:update_dimension - Dimension {}, BPM {}".format(dimension, beats_per_minute))
         if dimension == 'X':
             self.pulse_rate_bpm = str(round(beats_per_minute, 2))
 
