@@ -84,7 +84,7 @@ class CameraRaspbian:
         self.paused = False
 
     def is_opened(self):
-        return self.is_open
+        return self.is_open or self.frame_queue.qsize() > 0
 
     def update(self):
         self.start_time = time.time()

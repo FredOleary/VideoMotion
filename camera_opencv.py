@@ -65,7 +65,7 @@ class CameraOpenCv:
 
 
     def is_opened(self):
-        return self.capture.isOpened()
+        return self.capture.isOpened() or self.frame_queue.qsize() > 0
 
     def update(self):
         self.start_time = time.time()
