@@ -57,7 +57,7 @@ class CameraOpenCv:
         self.stopped = True
 
     def start_capture(self, number_of_frames):
-        print("-----------start_capture")
+        print("CameraOpenCv:start_capture. Total frame count: {}".format(self.total_frame_count))
         self.frame_queue = queue.Queue()
         self.frame_number = 0
         self.number_of_frames = number_of_frames
