@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 
 
 class MotionCharts:
+    """Charts showing results of motion analysis of video """
     def __init__(self):
         print("MotionCharts:__init__ ")
         self.charts = None
@@ -18,6 +19,8 @@ class MotionCharts:
 
     @staticmethod
     def create_time_chart(dimension):
+        """Shows three stacked charts. The top chart shows raw motion vs time.
+        The middle chart shows filtered motion vs time. The bottom chart is an FFT of the filtered motion"""
         fig, ax = plt.subplots(3, 1)
         fig.suptitle(dimension + " Dimension " + dimension, fontsize=14)
         ax[0].set_xlabel('Time')
@@ -32,6 +35,7 @@ class MotionCharts:
         return {"fig": fig, "ax": ax}
 
     def update_time_chart(self, data):
+        """Update amplitude vs time and FFT charts"""
         self.charts[data['dimension']]["ax"][0].clear()
         self.charts[data['dimension']]["ax"][1].clear()
         self.charts[data['dimension']]["ax"][2].clear()
