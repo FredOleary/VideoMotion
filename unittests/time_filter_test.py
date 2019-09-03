@@ -29,13 +29,18 @@ class TestFilters(unittest.TestCase):
             y, fps, config["low_pulse_bpm"], config["high_pulse_bpm"])
         self.assertEqual(round(beats_per_minute), 54)
 
+        x_temp, y_temp, x_frequency, y_frequency = mp.fft_filter_series(y_amplitude_filtered, fps, 'test',
+                                                                        config["low_pulse_bpm"], config["high_pulse_bpm"])
+
         chart_data = {
             "beats_per_minute": beats_per_minute,
             "x_time": x_time,
             "y_amplitude": y_amplitude,
             "y_amplitude_filtered": y_amplitude_filtered,
             "peaks_positive": peaks_positive,
-            "dimension": 'Test'
+            "dimension": 'Test',
+            "x_frequency": x_frequency,
+            "y_frequency": y_frequency
         }
 
         motion_charts.update_time_chart(chart_data)

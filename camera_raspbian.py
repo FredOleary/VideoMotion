@@ -25,9 +25,10 @@ class CameraRaspbian:
         self.stream = None
         self.stopped = False
         self.rawCapture = None
-        self.paused = False
-        self.result = None
+        self.paused = True
         self.frame_queue = queue.Queue()
+        self.start_time = time.time()
+        self.total_frame_count = 0
 
     # noinspection PyUnusedLocal
     def open_video(self, video_file_or_camera):
@@ -68,53 +69,43 @@ class CameraRaspbian:
         return width, height
 
     def read_frame(self):
-        if not self.frame_queue.empty():            # Frame is available
-            return True, self.frame_queue.get()
-        elif not self.result:                       # Video has ended
-            return False, None
-        elif self.paused:                           # Video is paused
-            return True, None
-        else:
-            return True, self.frame_queue.get()     # Block until next frame is delivered
-
-
-
+        return True, self.frame_queue.get()     # Block until next frame is delivered
 
     def close_video(self):
         self.is_open = False
         self.stopped = True
         return True
 
-    def pause_video(self):
-        print("-----------Video paused")
-        self.paused = True
-
-    def resume_video(self):
-        print("-----------Video resumed")
+    def start_capture(self, number_of_frames):
+        print("-----------start_capture")
         self.frame_queue = queue.Queue()
+        self.frame_number = 0
+        self.number_of_frames = number_of_frames
         self.paused = False
 
     def is_opened(self):
-        return self.is_open
+        return self.is_open or self.frame_queue.qsize() > 0
 
     def update(self):
-        start_time = time.time()
-        frame_count = 0
+        self.start_time = time.time()
+        self.total_frame_count = 0
         for f in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
-            frame_count += 1
-            self.result = True
+            self.total_frame_count += 1
             if not self.paused:
                 self.frame_queue.put(f.array)
+                self.frame_number += 1
+                if self.frame_number > self.number_of_frames:
+                    self.paused = True
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
-                print("Frame Count: " + str(frame_count) + ". FPS: " + str(round(frame_count/(time.time()-start_time),2)))
-                self.result =False
+                print("Frame Count: " + str(self.total_frame_count) + ". FPS: " + str(round(self.total_frame_count/(time.time()-self.start_time),2)))
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()
                 return
+

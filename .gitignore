@@ -25,5 +25,9 @@ venv/
 
 data/
 
+html/
+
 scratch_stuff/
 *.pyc
+
+*.avi
