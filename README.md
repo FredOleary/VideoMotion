@@ -1,5 +1,5 @@
 # Measuring pulse rate by analysing micro changes in head motion
-This project estimates pulse rate from a video stream by measuring face micro motion. It uses the open source vision library, opencv to process video streams
+This project estimates pulse rate from a video stream by measuring face micro motion. It uses the open source vision library, opencv, to process video streams
 
 ## Pre-requisites (Mac Laptop)
 1. Python 3 installed (3.7 version minimum)
@@ -35,16 +35,19 @@ This project estimates pulse rate from a video stream by measuring face micro mo
 
 2. To measure pulse rate run `python main.py`. When a face is detected, a 'green' rectangle will enclose the face and after about 10 seconds the pulse rate will be displayed over the video if it can be estimated. To exit, move focus to the video window and press 'q', then press <Enter>
 
+3. Optionally use `python main.py video_file.mov` to process a video file
+
 ## Options
-The configuration file config.txt contains the following options. (Note this is organized as a python dictionary)
+The configuration file config.txt contains the following options. (Note this is organized as a python dictionary so take care when editing)
 
 1. **low_pulse_bpm** - Low end of pulse rate, (beats-per-minute)
 2. **high_pulse_bpm** - Low end of pulse rate, (beats-per-minute)
-3. **video_fps** - Preferred video frame rate. (Not all cameras will honor this)
+3. **video_fps** - Preferred video frame rate. (Not all cameras will honor this, doesn't apply to video files)
 4. **resolution** - Video resolution
-5. **pulse_sample_seconds** - Length of interval used to measure pulse rate. E.g. if 10 then pulse rate will be updated every 10 seconds
+5. **pulse_sample_frames** - Number of frames to capture and process
 6. **show_pulse_charts** - When `True` charts of the head motion will show: 
     1. The raw changes in head motion over time
     2. The filtered changes in head motion over time using **low_pulse_bpm/high_pulse_bpm**
     3. The FFT of the filtered changes
-7. **use_tracking_after_detect** When `True`, the algorithm uses face detection followed by face tracking to measure motion. When `False` Face detection per frame is used. (Face detection per frame is less efficient)
+7. **feature_method** When `face`, the algorithm uses face detection followed by face tracking to measure motion. When `selectROI` The user can select a region of interest to track)
+8. **pause_between_samples** When `True`, processing will pause between samples. This is to allow charts to be examined. Press `Enter` to resume
