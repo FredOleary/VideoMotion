@@ -2,6 +2,7 @@ import time
 from threading import Thread
 import queue
 
+
 class CameraOpenCv:
 
     def __init__(self, cv2, fps, width, height):
@@ -14,7 +15,7 @@ class CameraOpenCv:
         self.paused = True
         self.frame_queue = queue.Queue()
         self.start_time = time.time()
-        self.end_time = time.time() +1
+        self.end_time = time.time() + 1
         self.total_frame_count = 0
         self.video_ended = False
 
@@ -40,7 +41,7 @@ class CameraOpenCv:
         return self.capture.get(self.cv2.CAP_PROP_FPS)
 
     def get_actual_frame_rate(self):
-        return self.total_frame_count/(time.time()-self.start_time)
+        return self.total_frame_count / (time.time() - self.start_time)
 
     def get_resolution(self):
         width = self.capture.get(self.cv2.CAP_PROP_FRAME_WIDTH)
@@ -48,7 +49,7 @@ class CameraOpenCv:
         return width, height
 
     def read_frame(self):
-        return True, self.frame_queue.get()     # Block until next frame is delivered
+        return True, self.frame_queue.get()  # Block until next frame is delivered
 
     def close_video(self):
         print("close_video - closing video")
@@ -63,7 +64,6 @@ class CameraOpenCv:
         self.number_of_frames = number_of_frames
         self.paused = False
 
-
     def is_opened(self):
         return self.capture.isOpened() or self.frame_queue.qsize() > 0
 
@@ -76,8 +76,8 @@ class CameraOpenCv:
                 self.total_frame_count += 1
                 if not self.paused:
                     self.frame_queue.put(frame)
-                    self.frame_number +=1
-                    if self.frame_number > self.number_of_frames:
+                    self.frame_number += 1
+                    if self.frame_number > self.number_of_frames and self.number_of_frames != -1:
                         print("CameraOpenCv - pausing")
                         self.paused = True
             else:
@@ -89,6 +89,6 @@ class CameraOpenCv:
                     self.stopped = True
 
         print("CameraOpenCv:Video Ended. Frame Count: " + str(self.total_frame_count) + ". FPS: " +
-              str(round(self.total_frame_count/(self.end_time-self.start_time),2)))
+              str(round(self.total_frame_count / (self.end_time - self.start_time), 2)))
         self.capture.release()
         return

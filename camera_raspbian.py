@@ -96,14 +96,15 @@ class CameraRaspbian:
             if not self.paused:
                 self.frame_queue.put(f.array)
                 self.frame_number += 1
-                if self.frame_number > self.number_of_frames:
+                if self.frame_number > self.number_of_frames and self.number_of_frames != -1:
                     self.paused = True
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
-                print("Frame Count: " + str(self.total_frame_count) + ". FPS: " + str(round(self.total_frame_count/(time.time()-self.start_time),2)))
+                print("Frame Count: " + str(self.total_frame_count) + ". FPS: " +
+                      str(round(self.total_frame_count/(time.time()-self.start_time), 2)))
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()

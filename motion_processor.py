@@ -4,7 +4,9 @@ from fft_filter import FFTFilter
 
 
 class MotionProcessor:
-
+    """MotionProcessor maintains a list of changes in the rectangle bounding the region of interest
+    There are four dimensions tracked, the x/y location changes of the ROI rectangle and the
+    width/height changes of the ROI rectangle"""
     def __init__(self):
         self.x = None
         self.y = None
@@ -26,7 +28,7 @@ class MotionProcessor:
         self.base_w = None
         self.base_h = None
         self.start_time = time.time()
-        print("MotionProcessor : initialized at: " + str(self.start_time))
+        print("MotionProcessor:initialized at: " + str(self.start_time))
 
     def add_motion_rectangle(self, x, y, w, h, force=False):
         if self.base_x is None or force:
@@ -54,9 +56,9 @@ class MotionProcessor:
                     self.w.append(self.w[len(self.w)-1])
                     self.h.append(self.h[len(self.h)-1])
 
-
         except IndexError:
-            print("foo")
+            print("Invalid index")
+
     def fft_filter_motion(self, dimension, fps, low_pulse_bpm, high_pulse_bpm):
         if dimension == 'X':
             series = self.x

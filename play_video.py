@@ -6,7 +6,6 @@ import cv2
 from camera_opencv import CameraOpenCv
 from camera_raspbian import CameraRaspbian
 
-VIDEO_FILE_CLIP = None
 CONFIG_FILE = "config.txt"
 
 
@@ -35,18 +34,13 @@ def play_video(config, video_file_or_camera):
 
     frame_count = 0
     start_time = time.time()
-
+    video.start_capture(-1)
     while video.is_opened():
         ret, frame = video.read_frame()
         if ret:
             frame_count = frame_count + 1
-            # cv2.putText(frame, "Frame: " ,
-            #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
             cv2.putText(frame, "Frame: " + str(frame_count) + ". FPS:" + str( round(frame_count / (time.time() - start_time), 2)),
                         (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
-
-            # cv2.putText(frame, "Pulse rate (BPM): " + self.pulse_rate_bpm + " Frame: " + str(frame_count),
-            #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
             cv2.imshow('Video', frame)
 
@@ -71,7 +65,7 @@ def read_config():
 
 
 def create_camera(video_file_or_camera, fps, width, height):
-    # For files nor non raspberry pi devices, use open cv, for realtime video on raspberry pi, use CameraRaspbian
+    # For video files nor non raspberry pi devices, use open cv, for real-time video on raspberry pi, use CameraRaspbian
     if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0 :
         return CameraRaspbian(fps, width, height)
     else:
@@ -79,11 +73,11 @@ def create_camera(video_file_or_camera, fps, width, height):
 
 
 def main(args):
-    global VIDEO_FILE_CLIP
+    video_file = None
     config = read_config()
     if len(args) > 1:
-        VIDEO_FILE_CLIP = args[1]
-    play_video(config, VIDEO_FILE_CLIP)
+        video_file = args[1]
+    play_video(config, video_file)
     return 0
 
 
