@@ -1,6 +1,8 @@
 # Measuring pulse rate by analysing micro changes in head motion
 This project estimates pulse rate from a video stream by measuring face micro motion. It uses the open source vision library, opencv, to process video streams
 
+Version 0.0.1
+
 ## Pre-requisites (Mac Laptop)
 1. Python 3 installed (3.7 version minimum)
 2. Webcam
