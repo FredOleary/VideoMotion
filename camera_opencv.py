@@ -21,7 +21,7 @@ class CameraOpenCv:
         self.is_live_stream = False
 
     def open_video(self, video_file_or_camera):
-        if len(video_file_or_camera) == 1:
+        if type(video_file_or_camera) is int:
             self.is_live_stream = True
         self.capture = self.cv2.VideoCapture(video_file_or_camera)
         self.capture.set(self.cv2.CAP_PROP_FRAME_WIDTH, self.width)
