@@ -57,7 +57,7 @@ class MotionCapture:
 
         cv2.destroyWindow('Frame')
         video.close_video()
-
+        time.sleep(.2)
         input("Hit Enter to exit")
 
     def start_capture(self, video):
@@ -87,10 +87,10 @@ class MotionCapture:
                         if len(faces) == 1:
                             for (x, y, w, h) in faces:
                                 # inset rect to capture points in face, empirical
-                                x += int(w/4)
-                                w = int(w/2)
-                                y += int(h/4)
-                                h = int(h/2)
+                                # x += int(w/4)
+                                # w = int(w/2)
+                                # y += int(h/4)
+                                # h = int(h/2)
                                 self.motion_processor.add_motion_rectangle(x, y, w, h)
                                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                                 track_box = (x, y, w, h)
@@ -153,6 +153,7 @@ class MotionCapture:
 
     def update_results(self, fps):
         """Process the the inter-fame changes, and filter results in both time and frequency domain """
+        print("MotionCapture:update_results FPS: {}".format(fps))
         self.__update_dimension('X', fps)
         self.__update_dimension('Y', fps)
 
