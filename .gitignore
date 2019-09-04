@@ -23,8 +23,6 @@ testfft.py
 #virtual environment
 venv/
 
-data/
-
 html/
 
 scratch_stuff/

@@ -74,6 +74,8 @@ class MotionCapture:
         frame_count = 0
         tracking = False
         face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
+        mouth_cascade = cv2.CascadeClassifier('data/haarcascade_mcs_mouth.xml')
+
         self.start_capture(video)
         while video.is_opened():
             ret, frame = video.read_frame()
@@ -81,23 +83,31 @@ class MotionCapture:
                 frame_count += 1
                 self.frame_number += 1
                 if not tracking:
-                    if self.config['feature_method'] == 'face':
+                    if self.config['feature_method'] == 'face' or self.config['feature_method'] == 'mouth':
+                        found = False
                         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
                         if len(faces) == 1:
                             for (x, y, w, h) in faces:
-                                # inset rect to capture points in face, empirical
-                                # x += int(w/4)
-                                # w = int(w/2)
-                                # y += int(h/4)
-                                # h = int(h/2)
-                                self.motion_processor.add_motion_rectangle(x, y, w, h)
-                                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
-                                track_box = (x, y, w, h)
-                                print("MotionCapture:process_feature_detect_then_track - Tracking after face detect")
-                                tracking = True
-                                self.tracker = cv2.TrackerCSRT_create()
-                                self.tracker.init(frame, track_box)
+                                if self.config['feature_method'] == 'mouth':
+                                    roi_gray = gray[y:y+h, x:x+w]
+                                    mouth = mouth_cascade.detectMultiScale(roi_gray, 1.3, 5)
+                                    for( x_mouth, y_mouth, w, h) in mouth:
+                                        x += x_mouth
+                                        y += y_mouth
+                                        found = True
+                                        break
+                                else:
+                                    found = True
+                                    break
+                        if found:
+                            self.motion_processor.add_motion_rectangle(x, y, w, h)
+                            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                            track_box = (x, y, w, h)
+                            print("MotionCapture:process_feature_detect_then_track - Tracking after face detect")
+                            tracking = True
+                            self.tracker = cv2.TrackerCSRT_create()
+                            self.tracker.init(frame, track_box)
                         else:
                             self.start_capture(video)
                     elif self.config['feature_method'] == 'selectROI':
