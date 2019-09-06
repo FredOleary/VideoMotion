@@ -19,14 +19,16 @@ class TestFilters(unittest.TestCase):
         length_of_signal_seconds = 15
         x_time = np.arange(0, length_of_signal_seconds, sample_interval)  # time vector 15 seconds
 
+        trend = np.linspace(0, 3, len(x_time))
+
         pulse_rate_seconds = 0.9  # test pulse rate in seconds frequency (.9Hz = 54 bpm)
         # y = np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time)
 
         # Add some noise at 3 X the pulse rate and 1/3 amplitude, (comment out to remove noise)
-        y = np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time) + .3*np.sin(pulse_rate_seconds*3 * 2.0 * np.pi * x_time)
+        y = trend + np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time) + .3*np.sin(pulse_rate_seconds*3 * 2.0 * np.pi * x_time)
 
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = mp.time_filter_series(
-            y, fps, config["low_pulse_bpm"], config["high_pulse_bpm"])
+        beats_per_minute, x_time, y_amplitude, y_amplitude_detrended, y_amplitude_filtered, peaks_positive = \
+            mp.time_filter_series(y, fps, config["low_pulse_bpm"], config["high_pulse_bpm"])
         self.assertEqual(round(beats_per_minute), 54)
 
         x_temp, y_temp, x_frequency, y_frequency = mp.fft_filter_series(y_amplitude_filtered, fps, 'test',
@@ -36,6 +38,7 @@ class TestFilters(unittest.TestCase):
             "beats_per_minute": beats_per_minute,
             "x_time": x_time,
             "y_amplitude": y_amplitude,
+            "y_amplitude_detrended": y_amplitude_detrended,
             "y_amplitude_filtered": y_amplitude_filtered,
             "peaks_positive": peaks_positive,
             "dimension": 'Test',
@@ -45,6 +48,7 @@ class TestFilters(unittest.TestCase):
 
         motion_charts.update_time_chart(chart_data)
         plt.show()
+        input("ff")
 
     def test_fft_filter(self):
         config = {"low_pulse_bpm":30, "high_pulse_bpm":150}

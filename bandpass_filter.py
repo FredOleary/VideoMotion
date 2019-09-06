@@ -1,6 +1,7 @@
 from scipy.signal import butter, lfilter
 import scipy.io
 import numpy as np
+from scipy import signal
 
 
 class BandPassFilter:
@@ -37,7 +38,8 @@ class BandPassFilter:
         x_time = x_time[range(len(y_amplitude))]
 
         if len(x_time > 0):
-            y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude, low_pulse_bps, high_pulse_bps, fps, order=6)
+            y_amplitude_detrended = signal.detrend(y_amplitude)
+            y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude_detrended, low_pulse_bps, high_pulse_bps, fps, order=6)
 
             # find peaks
             peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.2, threshold=None)
@@ -45,8 +47,8 @@ class BandPassFilter:
                 time_intervals = np.average(np.diff(peaks_positive))
                 per_beat_in_seconds = time_intervals * x_time[1]-x_time[0]
                 beats_per_minute = 1/per_beat_in_seconds * 60
-                return beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive
+                return beats_per_minute, x_time, y_amplitude, y_amplitude_detrended, y_amplitude_filtered, peaks_positive
             else:
-                return 0, x_time, y_amplitude, y_amplitude_filtered, x_time
+                return 0, x_time, y_amplitude, y_amplitude_detrended, y_amplitude_filtered, x_time
         # return unfiltered results.
-        return 0, x_time, y_amplitude, y_amplitude, x_time
+        return 0, x_time, y_amplitude, y_amplitude, y_amplitude, x_time

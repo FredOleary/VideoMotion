@@ -43,19 +43,31 @@ class MotionCharts:
             try:
                 self.charts[data['dimension']]["fig"].suptitle(data['dimension'] + " Dimension BPM - " +
                                                                str(round(data['beats_per_minute'], 2)), fontsize=14)
-                self.charts[data['dimension']]["ax"][0].plot(data['x_time'], data['y_amplitude'])
+
+                self.charts[data['dimension']]["ax"][0].plot(data['x_time'], data['y_amplitude'],
+                                                             label='Motion change - raw data')
+                self.charts[data['dimension']]["ax"][0].plot(data['x_time'], data['y_amplitude_detrended'],
+                                                             label='Motion change - detrended',
+                                                             color=(0.0, 1.0, 0.0))
+
+                self.charts[data['dimension']]["ax"][0].legend(loc='best')
+
                 self.charts[data['dimension']]["ax"][1].plot(data['x_time'], data['y_amplitude_filtered'],
-                                                             color=(1.0, 0.0, 0.0))
+                                                             color=(1.0, 0.0, 0.0), label='Motion change - filtered')
                 self.charts[data['dimension']]["ax"][1].plot(data['x_time'][data['peaks_positive']],
                                                              data['y_amplitude_filtered'][data['peaks_positive']],
                                                              'ro', ms=3, label='positive peaks',
                                                              color=(0.0, 0.0, 1.0))
+                self.charts[data['dimension']]["ax"][1].legend(loc='best')
+
                 if 'x_frequency' in data and data['x_frequency'] is not None:
                     chart_bar_width = (data['x_frequency'][len(data['x_frequency']) - 1] / (
-                                len(data['x_frequency']) * 2)) * 60
+                                len(data['x_frequency']) * 2))
 
-                    self.charts[data['dimension']]["ax"][2].bar(data['x_frequency'] * 60, data['y_frequency'],
-                                                                color=(1.0, 0.0, 0.0), width=chart_bar_width)
+                    self.charts[data['dimension']]["ax"][2].bar(data['x_frequency'], data['y_frequency'],
+                                                                color=(1.0, 0.0, 0.0), width=chart_bar_width,
+                                                                label='harmonics, Filtered data')
+                    self.charts[data['dimension']]["ax"][2].legend(loc='best')
 
             except IndexError:
                 print("charting error " + data['dimension'])

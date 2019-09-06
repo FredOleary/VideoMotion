@@ -168,7 +168,7 @@ class MotionCapture:
         self.__update_dimension('Y', fps)
 
     def __update_dimension(self, dimension, fps):
-        beats_per_minute, x_time, y_amplitude, y_amplitude_filtered, peaks_positive = \
+        beats_per_minute, x_time, y_amplitude, y_amplitude_detrended, y_amplitude_filtered, peaks_positive = \
             self.motion_processor.time_filter_motion(
                 dimension, fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
         # if a fft isn't required, comment out the line below
@@ -177,7 +177,7 @@ class MotionCapture:
                                                     self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
 
         print("MotionCapture:update_dimension - Dimension {}, BPM {}".format(dimension, beats_per_minute))
-        if dimension == 'X':
+        if dimension == 'Y':
             self.pulse_rate_bpm = str(round(beats_per_minute, 2))
 
         if self.config["show_pulse_charts"] is True:
@@ -185,6 +185,7 @@ class MotionCapture:
                 "beats_per_minute": beats_per_minute,
                 "x_time": x_time,
                 "y_amplitude": y_amplitude,
+                "y_amplitude_detrended": y_amplitude_detrended,
                 "y_amplitude_filtered": y_amplitude_filtered,
                 "peaks_positive": peaks_positive,
                 "x_frequency": x_frequency,
