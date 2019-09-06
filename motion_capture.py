@@ -81,6 +81,8 @@ class MotionCapture:
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
+                # If the original frame is not writable and we wish to modify the frame. E.g. change the ROI to green
+                frame = frame.copy()
                 frame_count += 1
                 self.frame_number += 1
                 if not tracking:
@@ -112,7 +114,7 @@ class MotionCapture:
                             green, roi_green = self.color_processor.get_average_color('G', frame, (x, y, w, h))
                             self.motion_processor.add_motion_rectangle(x, y, green, h)
 
-                            frame[y:y + h, x:x + w] = roi_green
+#                            frame[y:y + h, x:x + w] = roi_green
                             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 1)
                             track_box = (x, y, w, h)
                             print("MotionCapture:process_feature_detect_then_track - Tracking after face detect")
@@ -130,7 +132,7 @@ class MotionCapture:
                         green, roi_green = self.color_processor.get_average_color('G', frame, (x, y, w, h))
                         self.motion_processor.add_motion_rectangle(x, y, green, h)
 
-                        frame[y:y + h, x:x + w] = roi_green
+#                        frame[y:y + h, x:x + w] = roi_green
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                         track_box = (x, y, w, h)
                         print("MotionCapture:process_feature_detect_then_track - Tracking after roi select")
@@ -149,7 +151,7 @@ class MotionCapture:
                         green, roi_green = self.color_processor.get_average_color('G', frame, (x, y, w, h))
                         self.motion_processor.add_motion_rectangle(x, y, green, h)
 
-                        frame[y:y + h, x:x + w] = roi_green
+#                        frame[y:y + h, x:x + w] = roi_green
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (225, 0, 0), 1)
                     else:
                         print("MotionCapture:process_feature_detect_then_track - Tracker failed")
