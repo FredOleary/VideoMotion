@@ -5,7 +5,7 @@
     "resolution":{"width":640,"height":480}, # (Does not apply to video files)
     "pulse_sample_frames":300,  # Number of video frames used to measure pulse rate
     "show_pulse_charts":True,   #if True then display pulse rate time series charts are displayed
-    "feature_method":'face',    # Options are:
+    "feature_method":'forehead',    # Options are:
                                     # 'face' for face detect,
                                     # 'mouth' for mouth detect,
                                     # 'forehead' for forehead detection
