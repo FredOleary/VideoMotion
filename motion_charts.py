@@ -9,8 +9,8 @@ class MotionCharts:
 
     def initialize_charts(self):
         self.charts = {"X": self.create_time_chart('X'),
-                       "Y": self.create_time_chart('Y')
-                       # "W": self.create_time_chart('W'),
+                       "Y": self.create_time_chart('Y'),
+                       "W": self.create_time_chart('W')
                        # "H": self.create_time_chart('H')
                        }
 

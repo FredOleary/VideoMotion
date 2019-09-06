@@ -8,7 +8,7 @@ from camera_raspbian import CameraRaspbian
 
 from motion_processor import MotionProcessor
 from motion_charts import MotionCharts
-
+from color_processor import ColorProcessor
 
 # noinspection PyUnresolvedReferences
 class MotionCapture:
@@ -22,6 +22,7 @@ class MotionCapture:
         self.tracker = None
         self.frame_number = 0
         self.start_process_time = None
+        self.color_processor = ColorProcessor()
 
         if self.config["show_pulse_charts"] is True:
             self.motion_charts = MotionCharts()
@@ -108,8 +109,11 @@ class MotionCapture:
                                     found = True
                                     break
                         if found:
-                            self.motion_processor.add_motion_rectangle(x, y, w, h)
-                            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                            green, roi_green = self.color_processor.get_average_color('G', frame, (x, y, w, h))
+                            self.motion_processor.add_motion_rectangle(x, y, green, h)
+
+                            frame[y:y + h, x:x + w] = roi_green
+                            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 1)
                             track_box = (x, y, w, h)
                             print("MotionCapture:process_feature_detect_then_track - Tracking after face detect")
                             tracking = True
@@ -123,7 +127,10 @@ class MotionCapture:
                         y = r[1]
                         w = r[2]
                         h = r[3]
-                        self.motion_processor.add_motion_rectangle(x, y, w, h)
+                        green, roi_green = self.color_processor.get_average_color('G', frame, (x, y, w, h))
+                        self.motion_processor.add_motion_rectangle(x, y, green, h)
+
+                        frame[y:y + h, x:x + w] = roi_green
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                         track_box = (x, y, w, h)
                         print("MotionCapture:process_feature_detect_then_track - Tracking after roi select")
@@ -139,8 +146,11 @@ class MotionCapture:
                         y = int(bbox[1])
                         w = int(bbox[2])
                         h = int(bbox[3])
-                        self.motion_processor.add_motion_rectangle(x, y, w, h)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                        green, roi_green = self.color_processor.get_average_color('G', frame, (x, y, w, h))
+                        self.motion_processor.add_motion_rectangle(x, y, green, h)
+
+                        frame[y:y + h, x:x + w] = roi_green
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (225, 0, 0), 1)
                     else:
                         print("MotionCapture:process_feature_detect_then_track - Tracker failed")
                         self.start_capture(video)
@@ -173,6 +183,7 @@ class MotionCapture:
         print("MotionCapture:update_results FPS: {}".format(fps))
         self.__update_dimension('X', fps)
         self.__update_dimension('Y', fps)
+        self.__update_dimension('W', fps)
 
     def __update_dimension(self, dimension, fps):
         beats_per_minute, x_time, y_amplitude, y_amplitude_detrended, y_amplitude_filtered, peaks_positive = \
