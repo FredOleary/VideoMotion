@@ -83,7 +83,9 @@ class MotionCapture:
                 frame_count += 1
                 self.frame_number += 1
                 if not tracking:
-                    if self.config['feature_method'] == 'face' or self.config['feature_method'] == 'mouth':
+                    if self.config['feature_method'] == 'face' or \
+                            self.config['feature_method'] == 'mouth' or \
+                            self.config['feature_method'] == 'forehead':
                         found = False
                         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -97,6 +99,11 @@ class MotionCapture:
                                         y += y_mouth
                                         found = True
                                         break
+                                elif self.config['feature_method'] == 'forehead':
+                                    # For forehead detection, use the top fraction of face
+                                    h = int(h/5)
+                                    found = True
+                                    break
                                 else:
                                     found = True
                                     break
