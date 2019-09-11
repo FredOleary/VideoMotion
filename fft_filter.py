@@ -3,8 +3,6 @@ import numpy as np
 
 
 class FFTFilter:
-    def __init__(self):
-        print("BandPassFilter:__init__")
 
     @staticmethod
     def filter_harmonics(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm):

@@ -4,8 +4,8 @@ from roi_tracker import ROITracker
 
 class ROIColor(ROITracker):
     """ROIColor maintains raw and processed data for a RGB color changes """
-    def __init__(self, rgb_color):
-        super().__init__()
+    def __init__(self, rgb_color, name):
+        super().__init__(name)
         self.rgb_color = rgb_color
 
     def initialize(self, x, y, w, h, frame):

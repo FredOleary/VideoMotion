@@ -6,7 +6,8 @@ from scipy import signal
 
 class ROITracker:
     """ROITracker maintains raw and processed data for the dimension of interest """
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.time_series = None
         self.raw_amplitude_series = list()      # Raw data collected from video frames
         self.de_trended_series = None           # de-trended data
