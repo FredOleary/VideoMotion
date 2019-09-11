@@ -23,12 +23,12 @@ class TestROIMotion(unittest.TestCase):
         y = trend + np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time) + .3 * np.sin(
             pulse_rate_seconds * 3 * 2.0 * np.pi * x_time)
 
-        roi_motion = ROIMotion()
+        roi_motion = ROIMotion('Y')
 
-        roi_motion.initialize(y[0])
+        roi_motion.initialize(0, y[0], 0, 0, None)
 
         for x in range(int(fps * length_of_signal_seconds) - 1):
-            roi_motion.update(y[x + 1])
+            roi_motion.update(0, y[x + 1], 0, 0, None)
 
         roi_motion.process(fps, 30, 150)
 

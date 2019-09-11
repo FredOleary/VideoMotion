@@ -3,10 +3,16 @@ from roi_tracker import ROITracker
 
 class ROIMotion(ROITracker):
     """ROIMotion maintains raw and processed data for a X/Y dimension of interest """
-    def __init__(self):
+    def __init__(self, dimension):
         super().__init__()
+        self.dimension = dimension
 
-    def update(self, value ):
+    def initialize(self, x, y, w, h, frame):
+        value = x if self.dimension == 'X' else y
+        super().initialize(value)
+
+    def update(self, x, y, w, h, frame):
+        value = x if self.dimension == 'X' else y
         self.add_value(value)
 
     def process(self, fps, low_pulse_bpm, high_pulse_bpm):
