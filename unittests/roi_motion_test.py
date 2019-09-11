@@ -36,7 +36,8 @@ class TestROIMotion(unittest.TestCase):
 
         roi_motion.calculate_bpm_from_fft()
 
-        # TODO - Verify results....
+        self.assertEqual(round(roi_motion.bpm_fft), 60.0)
+        self.assertEqual(round(roi_motion.bpm_peaks), 60.0)
 
         chart_data = {
             "bpm_peaks": roi_motion.bpm_peaks,
