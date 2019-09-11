@@ -54,10 +54,11 @@ class MotionCharts:
 
                 self.charts[data['dimension']]["ax"][1].plot(data['x_time'], data['y_amplitude_filtered'],
                                                              color=(1.0, 0.0, 0.0), label='Motion change - filtered')
-                self.charts[data['dimension']]["ax"][1].plot(data['x_time'][data['peaks_positive']],
-                                                             data['y_amplitude_filtered'][data['peaks_positive']],
-                                                             'ro', ms=3, label='positive peaks',
-                                                             color=(0.0, 0.0, 1.0))
+                if 'peaks_positive' in data and data['peaks_positive'] is not None:
+                    self.charts[data['dimension']]["ax"][1].plot(data['x_time'][data['peaks_positive']],
+                                                                 data['y_amplitude_filtered'][data['peaks_positive']],
+                                                                 'ro', ms=3, label='positive peaks',
+                                                                 color=(0.0, 0.0, 1.0))
                 self.charts[data['dimension']]["ax"][1].legend(loc='best')
 
                 if 'x_frequency' in data and data['x_frequency'] is not None:
