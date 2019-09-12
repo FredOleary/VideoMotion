@@ -30,7 +30,7 @@ class CameraOpenCv:
         is_opened = self.capture.isOpened()
         if is_opened:
             self.stopped = False
-            thread = Thread(target=self.update, args=())
+            thread = Thread(target=self.__update, args=())
             thread.setDaemon(True)
             thread.start()
 
@@ -77,12 +77,12 @@ class CameraOpenCv:
         self.frame_number = 0
         self.number_of_frames = number_of_frames
         self.paused = False
+        self.start_time = time.time()
 
     def is_opened(self):
         return self.capture.isOpened() or self.frame_queue.qsize() > 0
 
-    def update(self):
-        self.start_time = time.time()
+    def __update(self):
         self.total_frame_count = 0
         while not self.stopped:
             if not self.paused:
@@ -92,8 +92,11 @@ class CameraOpenCv:
                     self.frame_queue.put(frame)
                     self.frame_number += 1
                     if self.frame_number >= self.number_of_frames and self.number_of_frames != -1:
-                        print("CameraOpenCv:update - pausing")
                         self.paused = True
+                        self.end_time = time.time()
+                        print("CameraOpenCv:__update - paused. Total frame count: {}, FPS: {}".format(
+                            self.total_frame_count,
+                            round(self.frame_number / (self.end_time - self.start_time), 2)))
                 else:
                     if not self.video_ended:
                         self.video_ended = True
@@ -103,8 +106,7 @@ class CameraOpenCv:
             else:
                 time.sleep(0.10)
 
-        print("CameraOpenCv:Video Ended. Frame Count: " + str(self.total_frame_count) + ". FPS: " +
-              str(round(self.total_frame_count / (self.end_time - self.start_time), 2)))
+        print("CameraOpenCv:Video Ended. Frame Count: {}".format(self.total_frame_count))
         self.capture.release()
-        print("CameraOpenCv:update ended")
+        print("CameraOpenCv:__update ended")
         return

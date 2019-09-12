@@ -41,7 +41,7 @@ class CameraRaspbian:
                                                          format="bgr", use_video_port=True)
             self.frame = self.rawCapture.array
 
-            Thread(target=self.update, args=()).start()
+            Thread(target=self.__update, args=()).start()
 
             self.frame = None
             self.stopped = False
@@ -86,7 +86,7 @@ class CameraRaspbian:
     def is_opened(self):
         return self.is_open or self.frame_queue.qsize() > 0
 
-    def update(self):
+    def __update(self):
         self.start_time = time.time()
         self.total_frame_count = 0
         for f in self.stream:
