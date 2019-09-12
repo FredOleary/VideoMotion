@@ -30,7 +30,7 @@ class FrameGrabber:
         is_opened = self.capture.isOpened()
         if is_opened:
             self.stopped = False
-            thread = Thread(target=self.__update, args=())
+            thread = Thread(target=self.update, args=())
             thread.setDaemon(True)
             thread.start()
 
@@ -87,7 +87,7 @@ class FrameGrabber:
         ret, frame = self.capture.read()
         return ret, frame
 
-    def __update(self):
+    def update(self):
         self.total_frame_count = 0
         while not self.stopped:
             if not self.paused:
@@ -99,7 +99,7 @@ class FrameGrabber:
                     if self.frame_number >= self.number_of_frames and self.number_of_frames != -1:
                         self.paused = True
                         self.end_time = time.time()
-                        print("CameraOpenCv:__update - paused. Total frame count: {}, FPS: {}".format(
+                        print("CameraOpenCv:update - paused. Total frame count: {}, FPS: {}".format(
                             self.total_frame_count,
                             round(self.frame_number / (self.end_time - self.start_time), 2)))
                 else:
@@ -113,5 +113,5 @@ class FrameGrabber:
 
         print("CameraOpenCv:Video Ended. Frame Count: {}".format(self.total_frame_count))
         self.capture.release()
-        print("CameraOpenCv:__update ended")
+        print("CameraOpenCv:update ended")
         return

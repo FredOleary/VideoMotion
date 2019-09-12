@@ -28,7 +28,7 @@ class RaspberianGrapper( FrameGrabber ):
             self.camera.resolution = (self.width, self.height)
             self.camera.framerate = self.fps
             self.rawCapture = PiRGBArray(self.camera, size=(self.width, self.height))
-            thread = Thread(target=self.__update, args=())
+            thread = Thread(target=self.update, args=())
             thread.setDaemon(True)
             thread.start()
             # allow the camera to warm up
@@ -70,5 +70,5 @@ class RaspberianGrapper( FrameGrabber ):
         frame = self.camera.capture(self.rawCapture, format="bgr", use_video_port=True)
         return True, frame.array
 
-    def __update(self):
-        super().__update()
+    def update(self):
+        super().update()
