@@ -1,4 +1,5 @@
 import time
+import queue
 from threading import Thread
 
 try:
@@ -12,44 +13,21 @@ except ImportError:
     print("Not raspberry Pi")
 
 
-from frame_grabber import FrameGrabber
-
-class RaspberianGrapper( FrameGrabber ):
+class RaspberianGrabber:
     def __init__(self, cv2, fps, width, height):
-        super().__init__(cv2, fps, width, height)
         self.camera = None
+        self.fps = fps
+        self.width = width
+        self.height = height
+        self.is_open = False
+        self.stream = None
+        self.stopped = False
         self.rawCapture = None
-        self.is_open = False
-
-    def open_video(self, video_file_or_camera):
-        self.is_live_stream = True
-        try:
-            self.camera = PiCamera()
-            self.camera.resolution = (self.width, self.height)
-            self.camera.framerate = self.fps
-            self.rawCapture = PiRGBArray(self.camera, size=(self.width, self.height))
-            thread = Thread(target=self.update, args=())
-            thread.setDaemon(True)
-            thread.start()
-            # allow the camera to warm up
-            time.sleep(0.3)
-
-            self.stopped = False
-            # allow the camera to warm up
-            time.sleep(0.3)
-            self.is_open = True
-            return True
-        except PiCameraMMALError:
-            print("CameraRaspbian - open camera failed")
-            self.is_open = False
-            return False
-
-    def close_video(self):
-        self.is_open = False
-        super().close_video()
-
-    def is_opened(self):
-        return self.is_open or self.frame_queue.qsize() > 0
+        self.paused = True
+        self.frame_queue = queue.Queue()
+        self.start_time = time.time()
+        self.total_frame_count = 0
+        self.is_live_stream = True # This camera is used only for live video
 
     def set_frame_rate(self, fps):
         self.camera.framerate = fps
@@ -65,10 +43,68 @@ class RaspberianGrapper( FrameGrabber ):
         width, height = self.camera.resolution
         return width, height
 
-    def get_next_frame(self):
-        print("CameraRaspbian:get_next_frame")
-        frame = self.camera.capture(self.rawCapture, format="bgr", use_video_port=True)
-        return True, frame.array
 
-    def update(self):
-        super().update()
+    def open_video(self, video_file_or_camera):
+        try:
+            self.camera = PiCamera()
+            self.camera.resolution = (self.width, self.height)
+            self.camera.framerate = self.fps
+            self.rawCapture = PiRGBArray(self.camera, size=(self.width, self.height))
+            self.stream = self.camera.capture_continuous(self.rawCapture,
+                                                         format="bgr", use_video_port=True)
+            self.stopped = False
+            self.is_open = True
+            thread = Thread(target=self.__update, args=())
+            thread.setDaemon(True)
+            thread.start()
+            # allow the camera to warm up
+            time.sleep(0.3)
+            return True
+        except PiCameraMMALError:
+            print("RaspberianGrabber - open camera failed")
+            self.is_open = False
+            return False
+
+    def close_video(self):
+        self.is_open = False
+        self.stopped = True
+
+    def is_opened(self):
+        return self.is_open or self.frame_queue.qsize() > 0
+
+    def read_frame(self):
+        return True, self.frame_queue.get()     # Block until next frame is delivered
+
+    def start_capture(self, number_of_frames):
+        print("RaspberianGrabber:start_capture. Total frame count: {}".format(self.total_frame_count))
+        self.frame_queue = queue.Queue()
+        self.frame_number = 0
+        self.number_of_frames = number_of_frames
+        self.paused = False
+        self.start_time = time.time()
+
+    def __update(self):
+        self.total_frame_count = 0
+        for f in self.stream:
+            # grab the frame from the stream and clear the stream in
+            # preparation for the next frame
+            self.total_frame_count += 1
+            if not self.paused:
+                self.frame_queue.put(f.array)
+                self.frame_number += 1
+                if self.frame_number > self.number_of_frames and self.number_of_frames != -1:
+                    self.paused = True
+                    self.end_time = time.time()
+                    print("RaspberianGrabber:update - paused. Total frame count: {}, FPS: {}".format(
+                        self.total_frame_count,
+                        round(self.frame_number / (self.end_time - self.start_time), 2)))
+
+            self.rawCapture.truncate(0)
+
+            # if the thread indicator variable is set, stop the thread
+            # and resource camera resources
+            if self.stopped:
+                self.stream.close()
+                self.rawCapture.close()
+                self.camera.close()
+                return

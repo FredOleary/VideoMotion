@@ -4,7 +4,7 @@ import os
 import cv2
 
 from frame_grabber import FrameGrabber
-from raspberian_grabber import RaspberianGrapper
+from raspberian_grabber import RaspberianGrabber
 
 CONFIG_FILE = "config.txt"
 
@@ -67,7 +67,7 @@ def read_config():
 def create_camera(video_file_or_camera, fps, width, height):
     # For video files nor non raspberry pi devices, use open cv, for real-time video on raspberry pi, use CameraRaspbian
     if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0 :
-        return RaspberianGrapper(cv2, fps, width, height)
+        return RaspberianGrabber(cv2, fps, width, height)
     else:
         return FrameGrabber(cv2, fps, width, height)
 

@@ -20,22 +20,6 @@ class FrameGrabber:
         self.video_ended = False
         self.is_live_stream = False
 
-    def open_video(self, video_file_or_camera):
-        if type(video_file_or_camera) is int:
-            self.is_live_stream = True
-        self.capture = self.cv2.VideoCapture(video_file_or_camera)
-        self.capture.set(self.cv2.CAP_PROP_FRAME_WIDTH, self.width)
-        self.capture.set(self.cv2.CAP_PROP_FRAME_HEIGHT, self.height)
-        self.capture.set(self.cv2.CAP_PROP_FPS, self.fps)
-        is_opened = self.capture.isOpened()
-        if is_opened:
-            self.stopped = False
-            thread = Thread(target=self.update, args=())
-            thread.setDaemon(True)
-            thread.start()
-
-        return self.capture.isOpened()
-
     def set_frame_rate(self, fps):
         self.capture.set(self.cv2.CAP_PROP_FPS, fps)
 
@@ -54,6 +38,31 @@ class FrameGrabber:
         height = self.capture.get(self.cv2.CAP_PROP_FRAME_HEIGHT)
         return width, height
 
+    def open_video(self, video_file_or_camera):
+        if type(video_file_or_camera) is int:
+            self.is_live_stream = True
+        self.capture = self.cv2.VideoCapture(video_file_or_camera)
+        self.capture.set(self.cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self.capture.set(self.cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.capture.set(self.cv2.CAP_PROP_FPS, self.fps)
+        is_opened = self.capture.isOpened()
+        if is_opened:
+            self.stopped = False
+            thread = Thread(target=self.__update, args=())
+            thread.setDaemon(True)
+            thread.start()
+
+        return self.capture.isOpened()
+
+    def close_video(self):
+        print("close_video - closing video")
+        if not self.video_ended:
+            self.end_time = time.time()
+        self.stopped = True
+
+    def is_opened(self):
+        return self.capture.isOpened() or self.frame_queue.qsize() > 0
+
     def read_frame(self):
         while True:
             if self.frame_queue.qsize() > 0:
@@ -62,12 +71,6 @@ class FrameGrabber:
                 return False, None
             else:
                 time.sleep(0.10)
-
-    def close_video(self):
-        print("close_video - closing video")
-        if not self.video_ended:
-            self.end_time = time.time()
-        self.stopped = True
 
     def start_capture(self, number_of_frames):
         print("CameraOpenCv:start_capture. Total frame count: {}".format(self.total_frame_count))
@@ -79,19 +82,12 @@ class FrameGrabber:
         self.paused = False
         self.start_time = time.time()
 
-    def is_opened(self):
-        return self.capture.isOpened() or self.frame_queue.qsize() > 0
 
-    def get_next_frame(self):
-        print("CameraOpenCv:get_next_frame")
-        ret, frame = self.capture.read()
-        return ret, frame
-
-    def update(self):
+    def __update(self):
         self.total_frame_count = 0
         while not self.stopped:
             if not self.paused:
-                ret, frame = self.get_next_frame()
+                ret, frame = self.capture.read()
                 if ret:
                     self.total_frame_count += 1
                     self.frame_queue.put(frame)
@@ -113,5 +109,4 @@ class FrameGrabber:
 
         print("CameraOpenCv:Video Ended. Frame Count: {}".format(self.total_frame_count))
         self.capture.release()
-        print("CameraOpenCv:update ended")
         return
