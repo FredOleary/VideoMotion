@@ -1,5 +1,6 @@
 import time
 import os
+import numpy as np
 
 import cv2
 
@@ -78,6 +79,8 @@ class FrameProcessor:
             for tracker in self.tracker_list:
                 self.hr_charts.add_chart(tracker.name)
 
+            self.hr_charts.add_chart("FFTComposite")
+
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
@@ -137,10 +140,22 @@ class FrameProcessor:
 
     def __update_results(self, fps):
         """Process the the inter-fame changes, and filter results in both time and frequency domain """
+        first = True
+        composite_data = {
+            "bpm_fft": None,
+            "name": "FFTComposite",
+        }
+        index = 1;
         for tracker in self.tracker_list:
             tracker.process(fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
             tracker.calculate_bpm_from_peaks_positive()
             tracker.calculate_bpm_from_fft()
+            if tracker.fft_amplitude_series is not None:
+                if first:
+                    composite_fft = np.copy(tracker.fft_amplitude_series)
+                    first = False
+                else:
+                    composite_fft = np.add(composite_fft, tracker.fft_amplitude_series)
 
             chart_data = {
                 "bpm_peaks": tracker.bpm_peaks,
@@ -155,8 +170,23 @@ class FrameProcessor:
                 "y_frequency": tracker.fft_amplitude_series
             }
 
+            composite_data.update({'x_frequency' + str(index) : tracker.fft_frequency_series} )
+            composite_data.update({'y_frequency' + str(index): tracker.fft_amplitude_series})
+
+            index +=1
             self.hr_charts.update_chart(chart_data)
-#            plt.show()
+
+
+        composite_data.update({'x_frequency_total': tracker.fft_frequency_series})
+        composite_data.update({'y_frequency_total': composite_fft})
+
+        #Calculate max fft of composite; TODO MOVE THIS to ROIComposite
+        freqArray = np.where(composite_fft == np.amax(composite_fft))
+        if len(freqArray) > 0:
+            composite_data["bpm_fft"] = (composite_data['x_frequency_total'][freqArray[0]] * 60)[0]
+
+        self.hr_charts.update_fft_composite_chart(composite_data)
+        print("Done")
 
     def __create_trackers(self):
         self.tracker_list.clear()

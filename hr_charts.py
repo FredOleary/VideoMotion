@@ -67,6 +67,51 @@ class HRCharts:
         plt.pause(0.00001)
         plt.show()
 
+    def update_fft_composite_chart(self, data):
+        """Update FFT Composite charts"""
+        self.chart_dictionary[data['name']]["ax"][0].clear()
+        self.chart_dictionary[data['name']]["ax"][1].clear()
+        self.chart_dictionary[data['name']]["ax"][2].clear()
+        try:
+            bpm_fft = "N/A" if data['bpm_fft'] is None else str(round(data['bpm_fft'], 2))
+
+            self.chart_dictionary[data['name']]["fig"].suptitle("{} BPM(fft) {}".format(
+                data['name'], bpm_fft), fontsize=14)
+
+            if 'x_frequency1' in data and data['x_frequency1'] is not None:
+                chart_bar_width = (data['x_frequency1'][len(data['x_frequency1']) - 1] / (
+                            len(data['x_frequency1']) * 2))
+
+                self.chart_dictionary[data['name']]["ax"][0].bar(data['x_frequency1'], data['y_frequency1'],
+                                                            color=(0.0, 1.0, 0.0), width=chart_bar_width,
+                                                            label='harmonics - 1')
+                self.chart_dictionary[data['name']]["ax"][0].legend(loc='best')
+
+            if 'x_frequency2' in data and data['x_frequency2'] is not None:
+                chart_bar_width = (data['x_frequency2'][len(data['x_frequency2']) - 1] / (
+                            len(data['x_frequency2']) * 2))
+
+                self.chart_dictionary[data['name']]["ax"][1].bar(data['x_frequency2'], data['y_frequency2'],
+                                                            color=(0.0, 0.0, 1.0), width=chart_bar_width,
+                                                            label='harmonics - 2')
+                self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
+
+            if 'x_frequency_total' in data and data['x_frequency_total'] is not None:
+                chart_bar_width = (data['x_frequency_total'][len(data['x_frequency_total']) - 1] / (
+                            len(data['x_frequency_total']) * 2))
+
+                self.chart_dictionary[data['name']]["ax"][2].bar(data['x_frequency_total'], data['y_frequency_total'],
+                                                                 color=(1.0, 0.0, 0.0), width=chart_bar_width,
+                                                                 label='Total harmonics')
+                self.chart_dictionary[data['name']]["ax"][2].legend(loc='best')
+
+        except IndexError:
+            print("charting error " + data['name'])
+
+        plt.ion()
+        plt.pause(0.00001)
+        plt.show()
+
     # def initialize_fft_test_chart(self, test):
     #     self.charts = {test: self.create_fft_chart(test)}
 
