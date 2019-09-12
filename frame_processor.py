@@ -3,7 +3,7 @@ import os
 
 import cv2
 
-from camera_opencv import CameraOpenCv
+from frame_grabber import FrameGrabber
 from camera_raspbian import CameraRaspbian
 
 from roi_selector import ROISelector
@@ -170,4 +170,4 @@ class FrameProcessor:
         if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0:
             return CameraRaspbian(fps, width, height)
         else:
-            return CameraOpenCv(cv2, fps, width, height)
+            return FrameGrabber(cv2, fps, width, height)
