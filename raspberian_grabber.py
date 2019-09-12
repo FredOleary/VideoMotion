@@ -107,4 +107,7 @@ class RaspberianGrabber:
                 self.stream.close()
                 self.rawCapture.close()
                 self.camera.close()
-                return
+                break
+
+        print("RaspberianGrabber:Video Ended. Frame Count: {}".format(self.total_frame_count))
+        return
