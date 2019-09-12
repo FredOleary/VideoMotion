@@ -19,6 +19,7 @@ class RaspberianGrapper( FrameGrabber ):
         super().__init__(cv2, fps, width, height)
         self.camera = None
         self.rawCapture = None
+        self.is_open = False
 
     def open_video(self, video_file_or_camera):
         self.is_live_stream = True
@@ -36,10 +37,19 @@ class RaspberianGrapper( FrameGrabber ):
             self.stopped = False
             # allow the camera to warm up
             time.sleep(0.3)
+            self.is_open = True
             return True
         except PiCameraMMALError:
             print("CameraRaspbian - open camera failed")
+            self.is_open = False
             return False
+
+    def close_video(self):
+        self.is_open = False
+        super().close_video()
+
+    def is_opened(self):
+        return self.is_open or self.frame_queue.qsize() > 0
 
     def set_frame_rate(self, fps):
         self.camera.framerate = fps
@@ -59,3 +69,6 @@ class RaspberianGrapper( FrameGrabber ):
         print("CameraRaspbian:get_next_frame")
         frame = self.camera.capture(self.rawCapture, format="bgr", use_video_port=True)
         return True, frame.array
+
+    def __update(self):
+        super().__update()
