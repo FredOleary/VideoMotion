@@ -59,6 +59,7 @@ class FrameGrabber:
         if not self.video_ended:
             self.end_time = time.time()
         self.stopped = True
+        time.sleep(0.3)
 
     def is_opened(self):
         return self.capture.isOpened() or self.frame_queue.qsize() > 0

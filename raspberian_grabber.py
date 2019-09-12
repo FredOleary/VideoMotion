@@ -68,6 +68,7 @@ class RaspberianGrabber:
     def close_video(self):
         self.is_open = False
         self.stopped = True
+        time.sleep(0.3)
 
     def is_opened(self):
         return self.is_open or self.frame_queue.qsize() > 0
