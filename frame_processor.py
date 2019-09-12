@@ -4,7 +4,7 @@ import os
 import cv2
 
 from frame_grabber import FrameGrabber
-from camera_raspbian import CameraRaspbian
+from raspberian_grabber import RaspberianGrapper
 
 from roi_selector import ROISelector
 from roi_motion import ROIMotion
@@ -168,6 +168,6 @@ class FrameProcessor:
         """Create the appropriate class using opencv or the raspberry Pi piCamera"""
         # For files nor non raspberry pi devices, use opencv, for real-time video on raspberry pi, use CameraRaspbian
         if os.path.isfile("/etc/rpi-issue") and video_file_or_camera == 0:
-            return CameraRaspbian(fps, width, height)
+            return RaspberianGrapper(cv2, fps, width, height)
         else:
             return FrameGrabber(cv2, fps, width, height)
