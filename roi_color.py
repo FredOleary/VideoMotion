@@ -13,8 +13,11 @@ class ROIColor(ROITracker):
         super().initialize(color_average)
 
     def update(self, x, y, w, h, frame ):
-        color_average, roi_filtered = self.__getAverage(x, y, w, h, frame)
-        self.add_value(color_average)
+        if x >= 0 and y >= 0:
+            color_average, roi_filtered = self.__getAverage(x, y, w, h, frame)
+            self.add_value(color_average)
+        else:
+            self.add_value(0)
 
     def process(self, fps, low_pulse_bpm, high_pulse_bpm):
         self.create_time_series(fps)
@@ -46,7 +49,9 @@ class ROIColor(ROITracker):
             # set blue and red channels to 0
             roi_filtered[:, :, 0] = 0
             roi_filtered[:, :, 2] = 0
-            avg_color_per_row = np.average(roi_filtered, axis=0)
-            color_average = np.average(avg_color_per_row, axis=0)[1]
-
+            try:
+                avg_color_per_row = np.average(roi_filtered, axis=0)
+                color_average = np.average(avg_color_per_row, axis=0)[1]
+            except ZeroDivisionError:
+                print("ZeroDivisionError - Exception!")
         return color_average, roi_filtered
