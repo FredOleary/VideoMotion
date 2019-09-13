@@ -27,6 +27,7 @@ class FrameProcessor:
         self.tracker_list = list()
         self.hr_charts = None
         self.roi_selector = ROISelector(config)
+        self.last_frame = None
 
     def capture(self, video_file_or_camera: str):
         """Open video file or start camera. Then start processing frames for motion"""
@@ -79,47 +80,47 @@ class FrameProcessor:
             for tracker in self.tracker_list:
                 self.hr_charts.add_chart(tracker.name)
 
-            self.hr_charts.add_chart("FFTComposite")
+            self.hr_charts.add_chart("FFTComposite", sub_charts = 2)
 
         while video.is_opened():
             ret, frame = video.read_frame()
             if ret:
                 # If the original frame is not writable and we wish to modify the frame. E.g. change the ROI to green
-                frame = frame.copy()
+                self.last_frame = frame.copy()
                 self.frame_number += 1
                 if not tracking:
-                    found, x, y, w, h = self.roi_selector.select_roi(frame)
+                    found, x, y, w, h = self.roi_selector.select_roi(self.last_frame)
                     if found:
                         print("FrameProcessor:process_feature_detect_then_track - Tracking after face detect")
                         for tracker in self.tracker_list:
-                            tracker.initialize(x, y, w, h, frame)
+                            tracker.initialize(x, y, w, h, self.last_frame)
 
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 1)
+                        cv2.rectangle(self.last_frame, (x, y), (x + w, y + h), (255, 0, 0), 1)
                         track_box = (x, y, w, h)
                         self.tracker = cv2.TrackerCSRT_create()
-                        self.tracker.init(frame, track_box)
+                        self.tracker.init(self.last_frame, track_box)
                         tracking = True
                     else:
                         self.__start_capture(video)
                 else:
                     # Update tracker
-                    ok, bbox = self.tracker.update(frame)
+                    ok, bbox = self.tracker.update(self.last_frame)
                     if ok:
                         x = int(bbox[0])
                         y = int(bbox[1])
                         w = int(bbox[2])
                         h = int(bbox[3])
                         for tracker in self.tracker_list:
-                            tracker.update(x, y, w, h, frame)
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (225, 0, 0), 1)
+                            tracker.update(x, y, w, h, self.last_frame)
+                        cv2.rectangle(self.last_frame, (x, y), (x + w, y + h), (225, 0, 0), 1)
                     else:
                         print("FrameProcessor:process_feature_detect_then_track - Tracker failed")
                         self.__start_capture(video)
                         tracking = False
 
-                cv2.putText(frame, "Pulse rate (BPM): {}. Frame: {}".format(self.pulse_rate_bpm, self.frame_number),
+                cv2.putText(self.last_frame, "Pulse rate (BPM): {}. Frame: {}".format(self.pulse_rate_bpm, self.frame_number),
                             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
-                cv2.imshow('Frame', frame)
+                cv2.imshow('Frame', self.last_frame)
 
                 if self.frame_number > self.config["pulse_sample_frames"]:
                     self.__update_results(video.get_frame_rate())
@@ -172,10 +173,10 @@ class FrameProcessor:
 
             composite_data.update({'x_frequency' + str(index) : tracker.fft_frequency_series} )
             composite_data.update({'y_frequency' + str(index): tracker.fft_amplitude_series})
+            composite_data.update({'fft_name' + str(index): tracker.name})
 
             index +=1
             self.hr_charts.update_chart(chart_data)
-
 
         composite_data.update({'x_frequency_total': tracker.fft_frequency_series})
         composite_data.update({'y_frequency_total': composite_fft})
@@ -184,13 +185,19 @@ class FrameProcessor:
         freqArray = np.where(composite_fft == np.amax(composite_fft))
         if len(freqArray) > 0:
             composite_data["bpm_fft"] = (composite_data['x_frequency_total'][freqArray[0]] * 60)[0]
+            self.pulse_rate_bpm = composite_data["bpm_fft"]
+            # cv2.putText(self.last_frame, "Pulse rate (BPM): {}. Frame: {}".format(self.pulse_rate_bpm, self.frame_number),
+            #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+            # cv2.imshow('Frame', self.last_frame)
+        else:
+            self.pulse_rate_bpm = "Not available"
 
         self.hr_charts.update_fft_composite_chart(composite_data)
         print("Done")
 
     def __create_trackers(self):
         self.tracker_list.clear()
-        self.tracker_list.append(ROIMotion('Y', "Longitude"))
+        self.tracker_list.append(ROIMotion('Y', "Vertical"))
         self.tracker_list.append(ROIColor('G', "Green"))
 
     @staticmethod

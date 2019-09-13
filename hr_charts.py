@@ -1,20 +1,19 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 class HRCharts:
     """Charts showing results of motion analysis of video """
     def __init__(self):
         self.chart_dictionary = {}
 
-
-    def add_chart(self, name):
-        self.chart_dictionary.update({name: self.__create_chart(name)})
+    def add_chart(self, name, sub_charts = 3):
+        self.chart_dictionary.update({name: self.__create_chart(name, sub_charts)})
 
     @staticmethod
-    def __create_chart(name):
+    def __create_chart(name, sub_charts):
         """Shows three stacked charts. The top chart shows raw motion vs time.
         The middle chart shows filtered motion vs time. The bottom chart is an FFT of the filtered motion"""
-        fig, ax = plt.subplots(3, 1)
+        fig, ax = plt.subplots(sub_charts, 1)
         fig.suptitle(name, fontsize=14)
         return {"fig": fig, "ax": ax}
 
@@ -71,39 +70,34 @@ class HRCharts:
         """Update FFT Composite charts"""
         self.chart_dictionary[data['name']]["ax"][0].clear()
         self.chart_dictionary[data['name']]["ax"][1].clear()
-        self.chart_dictionary[data['name']]["ax"][2].clear()
         try:
             bpm_fft = "N/A" if data['bpm_fft'] is None else str(round(data['bpm_fft'], 2))
 
             self.chart_dictionary[data['name']]["fig"].suptitle("{} BPM(fft) {}".format(
                 data['name'], bpm_fft), fontsize=14)
 
-            if 'x_frequency1' in data and data['x_frequency1'] is not None:
-                chart_bar_width = (data['x_frequency1'][len(data['x_frequency1']) - 1] / (
-                            len(data['x_frequency1']) * 2))
+            if ('x_frequency1' in data and data['x_frequency1'] is not None) and \
+                    ('x_frequency2' in data and data['x_frequency2'] is not None ):
 
-                self.chart_dictionary[data['name']]["ax"][0].bar(data['x_frequency1'], data['y_frequency1'],
-                                                            color=(0.0, 1.0, 0.0), width=chart_bar_width,
-                                                            label='harmonics - 1')
-                self.chart_dictionary[data['name']]["ax"][0].legend(loc='best')
+                chart_bar_width = np.min(np.diff(data['x_frequency1'])) / 3
 
-            if 'x_frequency2' in data and data['x_frequency2'] is not None:
-                chart_bar_width = (data['x_frequency2'][len(data['x_frequency2']) - 1] / (
-                            len(data['x_frequency2']) * 2))
+                self.chart_dictionary[data['name']]["ax"][0].bar(data['x_frequency1']-chart_bar_width, data['y_frequency1'],
+                                                            color = (0.0, 0.0, 1.0), width=chart_bar_width,
+                                                            label = data['fft_name1'])
+                self.chart_dictionary[data['name']]["ax"][0].legend(loc = 'best')
 
-                self.chart_dictionary[data['name']]["ax"][1].bar(data['x_frequency2'], data['y_frequency2'],
-                                                            color=(0.0, 0.0, 1.0), width=chart_bar_width,
-                                                            label='harmonics - 2')
-                self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
+                self.chart_dictionary[data['name']]["ax"][0].bar(data['x_frequency2'], data['y_frequency2'],
+                                                            color = (0.0, 1.0, 0.0), width=chart_bar_width,
+                                                            label = data['fft_name2'])
+                self.chart_dictionary[data['name']]["ax"][0].legend(loc = 'best')
 
             if 'x_frequency_total' in data and data['x_frequency_total'] is not None:
-                chart_bar_width = (data['x_frequency_total'][len(data['x_frequency_total']) - 1] / (
-                            len(data['x_frequency_total']) * 2))
+                chart_bar_width = np.min(np.diff(data['x_frequency_total'])) / 2
 
-                self.chart_dictionary[data['name']]["ax"][2].bar(data['x_frequency_total'], data['y_frequency_total'],
+                self.chart_dictionary[data['name']]["ax"][1].bar(data['x_frequency_total'], data['y_frequency_total'],
                                                                  color=(1.0, 0.0, 0.0), width=chart_bar_width,
                                                                  label='Total harmonics')
-                self.chart_dictionary[data['name']]["ax"][2].legend(loc='best')
+                self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
 
         except IndexError:
             print("charting error " + data['name'])
