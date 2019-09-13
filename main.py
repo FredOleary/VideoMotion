@@ -1,6 +1,6 @@
 import sys
 import typing
-from motion_capture import MotionCapture
+from frame_processor import FrameProcessor
 
 CONFIG_FILE = "config.txt"
 
@@ -16,10 +16,10 @@ def main(args: typing.List[str]) -> int:
     """Analyse video file or camera for motion. If no file is entered, the first camera is used."""
     video_file = None
     config = read_config()
-    mc = MotionCapture(config)
+    frame_processor = FrameProcessor(config)
     if len(args) > 1:
         video_file = args[1]
-    mc.capture(video_file)
+    frame_processor.capture(video_file)
     return 0
 
 

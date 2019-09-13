@@ -3,8 +3,6 @@ import numpy as np
 
 
 class FFTFilter:
-    def __init__(self):
-        print("BandPassFilter:__init__")
 
     @staticmethod
     def filter_harmonics(x_frequency, y_frequency, low_pulse_bpm, high_pulse_bpm):
@@ -54,3 +52,22 @@ class FFTFilter:
         else:
             # return empty arrays
             return np.array(series), np.array(series), np.array(series), np.array(series)
+
+    def fft_filter2(self, amplitude_series, fps, low_pulse_bpm, high_pulse_bpm):
+        ts = 1.0 / fps
+        video_length = len(amplitude_series) * ts
+        number_of_samples = len(amplitude_series)  # length of the signal
+        if number_of_samples > 0:
+            k = np.arange(number_of_samples)
+            x_fft = k / video_length  # two sides frequency range
+            x_fft = x_fft[range(int(number_of_samples / 2))]  # one side frequency range
+
+            y_fft = np.fft.fft(amplitude_series) / number_of_samples  # fft computing and normalization
+            y_fft = abs(y_fft[range(int(number_of_samples / 2))])
+
+            x_fft, y_fft = self.filter_harmonics(x_fft, y_fft, low_pulse_bpm, high_pulse_bpm)
+
+            return x_fft, y_fft
+        else:
+            # return empty arrays
+            return None, None

@@ -52,3 +52,18 @@ class BandPassFilter:
                 return 0, x_time, y_amplitude, y_amplitude_detrended, y_amplitude_filtered, x_time
         # return unfiltered results.
         return 0, x_time, y_amplitude, y_amplitude, y_amplitude, x_time
+
+
+    def time_filter2(self, amplitude, fps, low_pulse_bpm=None, high_pulse_bpm=None):
+        if low_pulse_bpm is None:
+            low_pulse_bps = 0
+        else:
+            low_pulse_bps = low_pulse_bpm/60
+
+        if high_pulse_bpm is None:
+            high_pulse_bps = 100000
+        else:
+            high_pulse_bps = high_pulse_bpm/60
+
+        filtered_amplitude = self.butter_bandpass_filter(amplitude, low_pulse_bps, high_pulse_bps, fps, order=6)
+        return filtered_amplitude
