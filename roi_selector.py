@@ -46,5 +46,6 @@ class ROISelector:
             y = r[1]
             w = r[2]
             h = r[3]
+            found = True
 
         return found, x, y, w, h
