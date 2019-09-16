@@ -11,7 +11,7 @@ from roi_selector import ROISelector
 from roi_motion import ROIMotion
 from roi_color import ROIColor
 from hr_charts import HRCharts
-
+from hr_csv import HRCsv
 
 # noinspection PyUnresolvedReferences
 class FrameProcessor:
@@ -28,13 +28,17 @@ class FrameProcessor:
         self.hr_charts = None
         self.roi_selector = ROISelector(config)
         self.last_frame = None
+        self.hr_csv = HRCsv()
+        self.hr_estimate_count = 0
 
     def capture(self, video_file_or_camera: str):
         """Open video file or start camera. Then start processing frames for motion"""
         print("FrameProcessor:capture")
 
+        csv_file = video_file_or_camera
         if video_file_or_camera is None:
             video_file_or_camera = 0  # First camera
+            csv_file = "camera"
 
         video = self.__create_camera(video_file_or_camera, self.config["video_fps"],
                                    self.config["resolution"]["width"],
@@ -44,6 +48,8 @@ class FrameProcessor:
         if not is_opened:
             print("FrameProcessor:capture - Error opening video stream or file, '{}'".format(video_file_or_camera))
         else:
+            self.hr_csv.open(csv_file)
+
             # retrieve the camera/video properties.
             width, height = video.get_resolution()
             self.config["resolution"]["width"] = width
@@ -58,6 +64,7 @@ class FrameProcessor:
             self.__process_feature_detect_then_track(video)
 
         cv2.destroyWindow('Frame')
+        self.hr_csv.close()
         video.close_video()
         time.sleep(.5)
         input("Hit Enter to exit")
@@ -118,7 +125,8 @@ class FrameProcessor:
                         self.__start_capture(video)
                         tracking = False
 
-                cv2.putText(self.last_frame, "Pulse rate (BPM): {}. Frame: {}".format(self.pulse_rate_bpm, self.frame_number),
+                pulse_rate = self.pulse_rate_bpm if isinstance(self.pulse_rate_bpm, str) else round(self.pulse_rate_bpm, 2)
+                cv2.putText(self.last_frame, "Pulse rate (BPM): {}. Frame: {}".format(pulse_rate, self.frame_number),
                             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
                 cv2.imshow('Frame', self.last_frame)
 
@@ -141,6 +149,8 @@ class FrameProcessor:
 
     def __update_results(self, fps):
         """Process the the inter-fame changes, and filter results in both time and frequency domain """
+        self.hr_estimate_count += 1
+        csv_line = 'Pass count, {},'.format(self.hr_estimate_count)
         first = True
         composite_data = {
             "bpm_fft": None,
@@ -177,6 +187,8 @@ class FrameProcessor:
 
             index +=1
             self.hr_charts.update_chart(chart_data)
+            csv_line = csv_line + '{},Pk-Pk,{},FFT,{},'.format(tracker.name, round(chart_data["bpm_peaks"], 2),
+                                                              round(chart_data["bpm_fft"], 2))
 
         composite_data.update({'x_frequency_total': tracker.fft_frequency_series})
         composite_data.update({'y_frequency_total': composite_fft})
@@ -186,6 +198,7 @@ class FrameProcessor:
         if len(freqArray) > 0:
             composite_data["bpm_fft"] = (composite_data['x_frequency_total'][freqArray[0]] * 60)[0]
             self.pulse_rate_bpm = composite_data["bpm_fft"]
+            csv_line = csv_line + "Composite FFT,{}".format(round(composite_data["bpm_fft"], 2))
             # cv2.putText(self.last_frame, "Pulse rate (BPM): {}. Frame: {}".format(self.pulse_rate_bpm, self.frame_number),
             #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
             # cv2.imshow('Frame', self.last_frame)
@@ -193,7 +206,8 @@ class FrameProcessor:
             self.pulse_rate_bpm = "Not available"
 
         self.hr_charts.update_fft_composite_chart(composite_data)
-        print("Done")
+        csv_line = csv_line + "\n"
+        self.hr_csv.write(csv_line)
 
     def __create_trackers(self):
         self.tracker_list.clear()

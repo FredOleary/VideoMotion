@@ -39,7 +39,7 @@ class BandPassFilter:
 
         if len(x_time > 0):
             y_amplitude_detrended = signal.detrend(y_amplitude)
-            y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude_detrended, low_pulse_bps, high_pulse_bps, fps, order=6)
+            y_amplitude_filtered = self.butter_bandpass_filter(y_amplitude_detrended, low_pulse_bps, high_pulse_bps, fps, order=4)
 
             # find peaks
             peaks_positive, _ = scipy.signal.find_peaks(y_amplitude_filtered, height=.2, threshold=None)
