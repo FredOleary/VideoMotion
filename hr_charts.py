@@ -32,9 +32,10 @@ class HRCharts:
 
                 self.chart_dictionary[data['name']]["ax"][0].plot(data['x_time'], data['y_amplitude'],
                                                              label='Motion change - raw data')
-                self.chart_dictionary[data['name']]["ax"][0].plot(data['x_time'], data['y_amplitude_detrended'],
-                                                             label='Motion change - de-trended',
-                                                             color=(0.0, 1.0, 0.0))
+                if data['y_amplitude_detrended'] is not None:
+                    self.chart_dictionary[data['name']]["ax"][0].plot(data['x_time'], data['y_amplitude_detrended'],
+                                                                 label='Motion change - de-trended',
+                                                                 color=(0.0, 1.0, 0.0))
 
                 self.chart_dictionary[data['name']]["ax"][0].legend(loc='best')
 
