@@ -150,7 +150,8 @@ class FrameProcessor:
     def __update_results(self, fps):
         """Process the the inter-fame changes, and filter results in both time and frequency domain """
         self.hr_estimate_count += 1
-        csv_line = 'Pass count, {},'.format(self.hr_estimate_count)
+        csv_header = "Pass count,"
+        csv_line = '{},'.format(self.hr_estimate_count)
         first = True
         composite_data = {
             "bpm_fft": None,
@@ -187,8 +188,8 @@ class FrameProcessor:
 
             index +=1
             self.hr_charts.update_chart(chart_data)
-            csv_line = csv_line + '{},Pk-Pk,{},FFT,{},'.format(tracker.name, round(chart_data["bpm_peaks"], 2),
-                                                              round(chart_data["bpm_fft"], 2))
+            csv_header = csv_header + "{} Pk-Pk, {} FFT,".format(tracker.name, tracker.name)
+            csv_line = csv_line + '{},{},'.format(round(chart_data["bpm_peaks"], 2), round(chart_data["bpm_fft"], 2))
 
         composite_data.update({'x_frequency_total': tracker.fft_frequency_series})
         composite_data.update({'y_frequency_total': composite_fft})
@@ -198,7 +199,8 @@ class FrameProcessor:
         if len(freqArray) > 0:
             composite_data["bpm_fft"] = (composite_data['x_frequency_total'][freqArray[0]] * 60)[0]
             self.pulse_rate_bpm = composite_data["bpm_fft"]
-            csv_line = csv_line + "Composite FFT,{}".format(round(composite_data["bpm_fft"], 2))
+            csv_header = csv_header + "Composite FFT"
+            csv_line = csv_line + "{}".format(round(composite_data["bpm_fft"], 2))
             # cv2.putText(self.last_frame, "Pulse rate (BPM): {}. Frame: {}".format(self.pulse_rate_bpm, self.frame_number),
             #             (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
             # cv2.imshow('Frame', self.last_frame)
@@ -206,6 +208,9 @@ class FrameProcessor:
             self.pulse_rate_bpm = "Not available"
 
         self.hr_charts.update_fft_composite_chart(composite_data)
+        csv_header = csv_header + "\n"
+        if self.hr_estimate_count == 1:
+            self.hr_csv.write(csv_header)
         csv_line = csv_line + "\n"
         self.hr_csv.write(csv_line)
 
