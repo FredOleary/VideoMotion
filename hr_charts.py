@@ -88,16 +88,58 @@ class HRCharts:
                 self.chart_dictionary[data['name']]["ax"][0].legend(loc = 'best')
 
                 self.chart_dictionary[data['name']]["ax"][0].bar(data['x_frequency2'], data['y_frequency2'],
-                                                            color = (0.0, 1.0, 0.0), width=chart_bar_width,
-                                                            label = data['fft_name2'])
+                                                                 color = (0.0, 1.0, 0.0), width=chart_bar_width,
+                                                                 label = data['fft_name2'])
                 self.chart_dictionary[data['name']]["ax"][0].legend(loc = 'best')
 
-            if 'x_frequency_total' in data and data['x_frequency_total'] is not None:
-                chart_bar_width = np.min(np.diff(data['x_frequency_total'])) / 2
+            if 'x_frequency_sum_fft' in data and data['x_frequency_sum_fft'] is not None:
+                chart_bar_width = np.min(np.diff(data['x_frequency_sum_fft'])) / 2
 
-                self.chart_dictionary[data['name']]["ax"][1].bar(data['x_frequency_total'], data['y_frequency_total'],
+                self.chart_dictionary[data['name']]["ax"][1].bar(data['x_frequency_sum_fft'], data['y_frequency_sum_fft'],
                                                                  color=(1.0, 0.0, 0.0), width=chart_bar_width,
-                                                                 label='Total harmonics')
+                                                                 label='Arithmetic sum of harmonics')
+                self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
+
+        except IndexError:
+            print("charting error " + data['name'])
+
+        plt.ion()
+        plt.pause(0.00001)
+        plt.show()
+
+    def update_correlated_composite_chart(self, data):
+        """Update FFT Composite charts"""
+        self.chart_dictionary[data['name']]["ax"][0].clear()
+        self.chart_dictionary[data['name']]["ax"][1].clear()
+        try:
+            bpm_pk = "N/A" if data['bpm_from_correlated_peaks'] is None else str(round(data['bpm_from_correlated_peaks'], 2))
+            bpm_fft = "N/A" if data['bpm_from_correlated_fft'] is None else str(round(data['bpm_from_correlated_fft'], 2))
+
+            self.chart_dictionary[data['name']]["fig"].suptitle("{} BPM(pk-pk) {}. BPM(fft) {}".format(
+                data['name'], bpm_pk, bpm_fft), fontsize=14)
+
+            if 'correlated_amplitude' in data and data['correlated_amplitude'] is not None:
+                self.chart_dictionary[data['name']]["ax"][0].plot(data['correlated_x_time'],
+                                                                  data['correlated_amplitude'],
+                                                                  color=(1.0, 0.0, 0.0),
+                                                                  label = 'Sum of correlated series')
+
+            if 'correlated_peaks_positive' in data and data['correlated_peaks_positive'] is not None:
+                self.chart_dictionary[data['name']]["ax"][0].\
+                    plot(data['correlated_x_time'][data['correlated_peaks_positive']],
+                         data['correlated_amplitude'][data['correlated_peaks_positive']],
+                         'ro', ms=3, label='positive peaks',
+                         color=(0.0, 0.0, 1.0))
+
+                self.chart_dictionary[data['name']]["ax"][0].legend(loc = 'best')
+
+            if 'correlated_fft_frequency' in data and data['correlated_fft_frequency'] is not None:
+                chart_bar_width = np.min(np.diff(data['correlated_fft_frequency'])) / 2
+
+                self.chart_dictionary[data['name']]["ax"][1].bar(data['correlated_fft_frequency'],
+                                                                 data['correlated_fft_amplitude'],
+                                                                 color=(1.0, 0.0, 0.0), width=chart_bar_width,
+                                                                 label='Sum of correlated signals - harmonics')
                 self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
 
         except IndexError:

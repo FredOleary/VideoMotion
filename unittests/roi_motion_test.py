@@ -1,7 +1,6 @@
 import unittest
 import matplotlib.pyplot as plt
 import numpy as np
-from motion_processor import MotionProcessor
 from roi_motion import ROIMotion
 from hr_charts import HRCharts
 
