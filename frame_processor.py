@@ -157,6 +157,9 @@ class FrameProcessor:
         self.hr_estimate_count += 1
         csv_header = "Pass count,"
         csv_line = '{},'.format(self.hr_estimate_count)
+
+        roi_composite = ROIComposite(self.tracker_list)
+
         composite_data_summ_fft = {
             "bpm_fft": None,
             "name": SUMFTTComposite,
@@ -172,8 +175,8 @@ class FrameProcessor:
             tracker.calculate_bpm_from_peaks_positive()
             tracker.calculate_bpm_from_fft()
 
-            composite_data_summ_fft.update({'x_frequency' + str(index) : tracker.fft_frequency} )
-            composite_data_summ_fft.update({'y_frequency' + str(index): tracker.fft_amplitude})
+            composite_data_summ_fft.update({'fft_frequency' + str(index) : tracker.fft_frequency} )
+            composite_data_summ_fft.update({'fft_amplitude' + str(index): tracker.fft_amplitude})
             composite_data_summ_fft.update({'fft_name' + str(index): tracker.name})
 
             index +=1
@@ -181,25 +184,11 @@ class FrameProcessor:
             csv_header = csv_header + "{} Pk-Pk, {} FFT,".format(tracker.name, tracker.name)
             csv_line = csv_line + '{},{},'.format(round(tracker.bpm_pk_pk, 2), round(tracker.bpm_fft, 2))
 
-        roi_composite = ROIComposite(self.tracker_list)
         roi_composite.sum_ffts()
         roi_composite.correlate_and_add(fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
         roi_composite.calculate_bpm_from_sum_of_ffts()
         roi_composite.calculate_bpm_from_peaks_positive()
-
-        composite_data_summ_fft.update({'y_frequency_sum_fft': roi_composite.sum_of_ffts_amplitude})
-        composite_data_summ_fft.update({'x_frequency_sum_fft': roi_composite.sum_of_ffts_frequency})
-
-        composite_data_correlated.update({'correlated_y1_amplitude': roi_composite.correlated_y1_amplitude})
-        composite_data_correlated.update({'correlated_y2_amplitude': roi_composite.correlated_y2_amplitude})
-        composite_data_correlated.update({'correlated_amplitude': roi_composite.correlated_amplitude})
-        composite_data_correlated.update({'correlated_peaks_positive': roi_composite.correlated_peaks_positive})
-        composite_data_correlated.update({'correlated_x_time': roi_composite.correlated_x_time})
-
-        composite_data_correlated.update({'correlated_fft_frequency': roi_composite.correlated_fft_frequency})
-        composite_data_correlated.update({'correlated_fft_amplitude': roi_composite.correlated_fft_amplitude})
-        composite_data_correlated.update({'bpm_from_correlated_peaks': roi_composite.bpm_from_correlated_peaks})
-        composite_data_correlated.update({'bpm_from_correlated_fft': roi_composite.bpm_from_sum_of_ffts})
+        roi_composite.calculate_bpm_from_correlated_ffts()
 
         csv_header = csv_header + "Sum of FFTs"
 
@@ -211,9 +200,8 @@ class FrameProcessor:
             csv_line = csv_line + "NA,"
             self.pulse_rate_bpm = "Not available"
 
-        self.hr_charts.update_fft_composite_chart(composite_data_summ_fft)
-        self.hr_charts.update_correlated_composite_chart(composite_data_correlated)
-
+        self.hr_charts.update_fft_composite_chart(roi_composite, composite_data_summ_fft)
+        self.hr_charts.update_correlated_composite_chart(roi_composite,composite_data_correlated)
 
         csv_header = csv_header + "\n"
         if self.hr_estimate_count == 1:

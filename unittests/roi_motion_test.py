@@ -22,7 +22,7 @@ class TestROIMotion(unittest.TestCase):
         y = trend + np.sin(pulse_rate_seconds * 2.0 * np.pi * x_time) + .3 * np.sin(
             pulse_rate_seconds * 3 * 2.0 * np.pi * x_time)
 
-        roi_motion = ROIMotion('Y')
+        roi_motion = ROIMotion('Y', 'MotionChart')
 
         roi_motion.initialize(0, y[0], 0, 0, None)
 
@@ -38,20 +38,7 @@ class TestROIMotion(unittest.TestCase):
         self.assertEqual(round(roi_motion.bpm_fft), 60.0)
         self.assertEqual(round(roi_motion.bpm_pk_pk), 60.0)
 
-        chart_data = {
-            "bpm_peaks": roi_motion.bpm_pk_pk,
-            "bpm_fft": roi_motion.bpm_fft,
-            "x_time": roi_motion.time_period,
-            "y_amplitude": roi_motion.raw_amplitude,
-            "y_amplitude_detrended": roi_motion.de_trended_amplitude,
-            "y_amplitude_filtered": roi_motion.filtered_amplitude,
-            "peaks_positive": roi_motion.peaks_positive_amplitude,
-            "name": 'MotionChart',
-            "x_frequency": roi_motion.fft_frequency,
-            "y_frequency": roi_motion.fft_amplitude
-        }
-
-        hr_chart.update_chart(chart_data)
+        hr_chart.update_chart(roi_motion)
         plt.show()
         input("Done - Press Enter/Return to exit")
 

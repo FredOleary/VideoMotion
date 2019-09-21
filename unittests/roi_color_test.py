@@ -27,7 +27,7 @@ class TestROIColor(unittest.TestCase):
         rgb_array[..., 1] = .5 * 256
         rgb_array[..., 2] = .1 * 256
 
-        roi_color = ROIColor( 'G')
+        roi_color = ROIColor( 'G', 'ColorChart')
 
         roi_color.initialize(10,10, 100, 100, rgb_array)
 
@@ -45,20 +45,7 @@ class TestROIColor(unittest.TestCase):
             self.assertTrue(True, "roi_color.bpm_peaks - out of range")
         self.assertEqual(round(roi_color.bpm_fft), 60.0)
 
-        chart_data = {
-            "bpm_peaks": roi_color.bpm_pk_pk,
-            "bpm_fft": roi_color.bpm_fft,
-            "x_time": roi_color.time_period,
-            "y_amplitude": roi_color.raw_amplitude,
-            "y_amplitude_detrended": roi_color.de_trended_amplitude,
-            "y_amplitude_filtered": roi_color.filtered_amplitude,
-            "peaks_positive": roi_color.peaks_positive_amplitude,
-            "name": 'ColorChart',
-            "x_frequency": roi_color.fft_frequency,
-            "y_frequency": roi_color.fft_amplitude
-        }
-
-        hr_chart.update_chart(chart_data)
+        hr_chart.update_chart(roi_color)
         plt.show()
         input("Done - Press Enter/Return to exit")
 

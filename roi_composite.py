@@ -10,14 +10,16 @@ class ROIComposite():
         self.sum_of_ffts_amplitude = None
         self.sum_of_ffts_frequency = None
         self.correlated_amplitude = None
-        self.correlated_x_time = None
+        self.correlated_time_period = None
+        self.correlated_peaks_positive = None
+        self.correlated_y1_amplitude = None
+        self.correlated_y2_amplitude = None
         self.correlated_fft_amplitude = None
         self.correlated_fft_frequency = None
         self.bpm_from_sum_of_ffts = None
         self.bpm_from_correlated_peaks = None
-        self.correlated_peaks_positive = None
-        self.correlated_y1_amplitude = None
-        self.correlated_y2_amplitude = None
+        self.bpm_from_correlated_ffts = None
+        self.name = 'ROI-Composite'
 
     def sum_ffts(self):
         """Calculate the composite FFT by arithmetically summing ffts """
@@ -48,7 +50,7 @@ class ROIComposite():
 
             sample_interval = 1.0 / fps
             video_length = len(self.correlated_amplitude) * sample_interval
-            self.correlated_x_time = np.arange(0, video_length, sample_interval)
+            self.correlated_time_period = np.arange(0, video_length, sample_interval)
 
             fft_filter = FFTFilter()
             self.correlated_fft_frequency, self.correlated_fft_amplitude = \
@@ -62,7 +64,7 @@ class ROIComposite():
     def calculate_bpm_from_peaks_positive(self):
         if self.correlated_peaks_positive is not None:
             time_intervals = np.average(np.diff(self.correlated_peaks_positive))
-            per_beat_in_seconds = time_intervals * self.correlated_x_time[1] - self.correlated_x_time[0]
+            per_beat_in_seconds = time_intervals * self.correlated_time_period[1] - self.correlated_time_period[0]
             self.bpm_from_correlated_peaks = 1 / per_beat_in_seconds * 60
 
     def calculate_bpm_from_sum_of_ffts(self):
@@ -71,3 +73,10 @@ class ROIComposite():
         if len(freq_array) > 0:
             # Use this index to get the corresponding frequency in beats/minute
             self.bpm_from_sum_of_ffts = (self.sum_of_ffts_frequency[freq_array[0]] * 60)[0]
+
+    def calculate_bpm_from_correlated_ffts(self):
+        # Get the index of the maximum harmonic in the fft
+        freq_array = np.where(self.correlated_fft_amplitude == np.amax(self.correlated_fft_amplitude))
+        if len(freq_array) > 0:
+            # Use this index to get the corresponding frequency in beats/minute
+            self.bpm_from_correlated_ffts = (self.correlated_fft_frequency[freq_array[0]] * 60)[0]
