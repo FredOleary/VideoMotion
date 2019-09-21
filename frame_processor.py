@@ -172,27 +172,14 @@ class FrameProcessor:
             tracker.calculate_bpm_from_peaks_positive()
             tracker.calculate_bpm_from_fft()
 
-            chart_data = {
-                "bpm_peaks": tracker.bpm_peaks,
-                "bpm_fft": tracker.bpm_fft,
-                "x_time": tracker.time_series,
-                "y_amplitude": tracker.raw_amplitude_series,
-                "y_amplitude_detrended": tracker.de_trended_series,
-                "y_amplitude_filtered": tracker.filtered_amplitude_series,
-                "peaks_positive": tracker.peaks_positive_amplitude,
-                "name": tracker.name,
-                "x_frequency": tracker.fft_frequency_series,
-                "y_frequency": tracker.fft_amplitude_series
-            }
-
-            composite_data_summ_fft.update({'x_frequency' + str(index) : tracker.fft_frequency_series} )
-            composite_data_summ_fft.update({'y_frequency' + str(index): tracker.fft_amplitude_series})
+            composite_data_summ_fft.update({'x_frequency' + str(index) : tracker.fft_frequency} )
+            composite_data_summ_fft.update({'y_frequency' + str(index): tracker.fft_amplitude})
             composite_data_summ_fft.update({'fft_name' + str(index): tracker.name})
 
             index +=1
-            self.hr_charts.update_chart(chart_data)
+            self.hr_charts.update_chart(tracker)
             csv_header = csv_header + "{} Pk-Pk, {} FFT,".format(tracker.name, tracker.name)
-            csv_line = csv_line + '{},{},'.format(round(chart_data["bpm_peaks"], 2), round(chart_data["bpm_fft"], 2))
+            csv_line = csv_line + '{},{},'.format(round(tracker.bpm_pk_pk, 2), round(tracker.bpm_fft, 2))
 
         roi_composite = ROIComposite(self.tracker_list)
         roi_composite.sum_ffts()
@@ -203,6 +190,8 @@ class FrameProcessor:
         composite_data_summ_fft.update({'y_frequency_sum_fft': roi_composite.sum_of_ffts_amplitude})
         composite_data_summ_fft.update({'x_frequency_sum_fft': roi_composite.sum_of_ffts_frequency})
 
+        composite_data_correlated.update({'correlated_y1_amplitude': roi_composite.correlated_y1_amplitude})
+        composite_data_correlated.update({'correlated_y2_amplitude': roi_composite.correlated_y2_amplitude})
         composite_data_correlated.update({'correlated_amplitude': roi_composite.correlated_amplitude})
         composite_data_correlated.update({'correlated_peaks_positive': roi_composite.correlated_peaks_positive})
         composite_data_correlated.update({'correlated_x_time': roi_composite.correlated_x_time})

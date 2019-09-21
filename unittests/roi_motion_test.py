@@ -36,19 +36,19 @@ class TestROIMotion(unittest.TestCase):
         roi_motion.calculate_bpm_from_fft()
 
         self.assertEqual(round(roi_motion.bpm_fft), 60.0)
-        self.assertEqual(round(roi_motion.bpm_peaks), 60.0)
+        self.assertEqual(round(roi_motion.bpm_pk_pk), 60.0)
 
         chart_data = {
-            "bpm_peaks": roi_motion.bpm_peaks,
+            "bpm_peaks": roi_motion.bpm_pk_pk,
             "bpm_fft": roi_motion.bpm_fft,
-            "x_time": roi_motion.time_series,
-            "y_amplitude": roi_motion.raw_amplitude_series,
-            "y_amplitude_detrended": roi_motion.de_trended_series,
-            "y_amplitude_filtered": roi_motion.filtered_amplitude_series,
+            "x_time": roi_motion.time_period,
+            "y_amplitude": roi_motion.raw_amplitude,
+            "y_amplitude_detrended": roi_motion.de_trended_amplitude,
+            "y_amplitude_filtered": roi_motion.filtered_amplitude,
             "peaks_positive": roi_motion.peaks_positive_amplitude,
             "name": 'MotionChart',
-            "x_frequency": roi_motion.fft_frequency_series,
-            "y_frequency": roi_motion.fft_amplitude_series
+            "x_frequency": roi_motion.fft_frequency,
+            "y_frequency": roi_motion.fft_amplitude
         }
 
         hr_chart.update_chart(chart_data)

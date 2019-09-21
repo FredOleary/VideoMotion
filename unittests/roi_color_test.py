@@ -41,21 +41,21 @@ class TestROIColor(unittest.TestCase):
 
         roi_color.calculate_bpm_from_fft()
 
-        if roi_color.bpm_peaks < 58 or roi_color.bpm_peaks > 62:
+        if roi_color.bpm_pk_pk < 58 or roi_color.bpm_pk_pk > 62:
             self.assertTrue(True, "roi_color.bpm_peaks - out of range")
         self.assertEqual(round(roi_color.bpm_fft), 60.0)
 
         chart_data = {
-            "bpm_peaks": roi_color.bpm_peaks,
+            "bpm_peaks": roi_color.bpm_pk_pk,
             "bpm_fft": roi_color.bpm_fft,
-            "x_time": roi_color.time_series,
-            "y_amplitude": roi_color.raw_amplitude_series,
-            "y_amplitude_detrended": roi_color.de_trended_series,
-            "y_amplitude_filtered": roi_color.filtered_amplitude_series,
+            "x_time": roi_color.time_period,
+            "y_amplitude": roi_color.raw_amplitude,
+            "y_amplitude_detrended": roi_color.de_trended_amplitude,
+            "y_amplitude_filtered": roi_color.filtered_amplitude,
             "peaks_positive": roi_color.peaks_positive_amplitude,
             "name": 'ColorChart',
-            "x_frequency": roi_color.fft_frequency_series,
-            "y_frequency": roi_color.fft_amplitude_series
+            "x_frequency": roi_color.fft_frequency,
+            "y_frequency": roi_color.fft_amplitude
         }
 
         hr_chart.update_chart(chart_data)

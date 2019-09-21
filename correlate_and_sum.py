@@ -10,15 +10,15 @@ def correlate_and_sum(y1, y2):
         #Y1 leads Y2, so shift Y2 back to Y1
         y2_shift = y2[shift:]
         y1_shift = y1[:len(y1)-shift]
-        return y1_shift + y2_shift
+        return y1_shift, y2_shift, y1_shift + y2_shift
     elif shift < 0:
         # Y2 leads Y1, so shift Y1 back to Y2
         shift = -shift
         y1_shift = y1[shift:]
         y2_shift = y2[:len(y2)-shift]
-        return y1_shift + y2_shift
+        return y1_shift, y2_shift, y1_shift + y2_shift
     else:
-        return y1 + y2
+        return y1, y2, y1 + y2
 
 
 def __compute_shift(y1, y2):

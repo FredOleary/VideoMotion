@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+from roi_tracker import ROITracker
 class HRCharts:
     """Charts showing results of motion analysis of video """
     def __init__(self):
@@ -17,50 +17,61 @@ class HRCharts:
         fig.suptitle(name, fontsize=14)
         return {"fig": fig, "ax": ax}
 
-    def update_chart(self, data):
+    def update_chart(self, tracker):
         """Update amplitude vs time and FFT charts"""
-        self.chart_dictionary[data['name']]["ax"][0].clear()
-        self.chart_dictionary[data['name']]["ax"][1].clear()
-        self.chart_dictionary[data['name']]["ax"][2].clear()
-        if len(data['x_time']) > 0:
+        self.chart_dictionary[tracker.name]["ax"][0].clear()
+        self.chart_dictionary[tracker.name]["ax"][1].clear()
+        self.chart_dictionary[tracker.name]["ax"][2].clear()
+        if len(tracker.time_period) > 0:
             try:
-                bpm_pk = "N/A" if data['bpm_peaks'] is None else str(round(data['bpm_peaks'], 2))
-                bpm_fft = "N/A" if data['bpm_fft'] is None else str(round(data['bpm_fft'], 2))
+                bpm_pk = "N/A" if tracker.bpm_pk_pk is None else str(round(tracker.bpm_pk_pk, 2))
+                bpm_fft = "N/A" if tracker.bpm_fft is None else str(round(tracker.bpm_fft, 2))
 
-                self.chart_dictionary[data['name']]["fig"].suptitle("{} BPM(pk) {}. BPM(fft) {}".format(
-                    data['name'], bpm_pk, bpm_fft), fontsize=14)
+                self.chart_dictionary[tracker.name]["fig"].suptitle("{} BPM(pk-pk) {}. BPM(fft) {}".format(
+                    tracker.name, bpm_pk, bpm_fft), fontsize=14)
 
-                self.chart_dictionary[data['name']]["ax"][0].plot(data['x_time'], data['y_amplitude'],
-                                                             label='Motion change - raw data')
-                if data['y_amplitude_detrended'] is not None:
-                    self.chart_dictionary[data['name']]["ax"][0].plot(data['x_time'], data['y_amplitude_detrended'],
-                                                                 label='Motion change - de-trended',
-                                                                 color=(0.0, 1.0, 0.0))
+                self.chart_dictionary[tracker.name]["ax"][0].plot(
+                    tracker.time_period,
+                    tracker.raw_amplitude,
+                    label='Dimension changes - raw data')
 
-                self.chart_dictionary[data['name']]["ax"][0].legend(loc='best')
+                if tracker.de_trended_amplitude is not None:
+                    self.chart_dictionary[tracker.name]["ax"][0].plot(
+                        tracker.time_period,
+                        tracker.de_trended_amplitude,
+                        label='Dimension changes - de-trended',
+                        color=(0.0, 1.0, 0.0))
 
-                self.chart_dictionary[data['name']]["ax"][1].plot(data['x_time'], data['y_amplitude_filtered'],
-                                                             color=(1.0, 0.0, 0.0), label='Motion change - filtered')
-                if 'peaks_positive' in data and data['peaks_positive'] is not None:
-                    self.chart_dictionary[data['name']]["ax"][1].plot(data['x_time'][data['peaks_positive']],
-                                                                 data['y_amplitude_filtered'][data['peaks_positive']],
-                                                                 'ro', ms=3, label='positive peaks',
-                                                                 color=(0.0, 0.0, 1.0))
-                self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
+                self.chart_dictionary[tracker.name]["ax"][0].legend(loc='best')
 
-                if 'x_frequency' in data and data['x_frequency'] is not None:
-                    chart_bar_width = (data['x_frequency'][len(data['x_frequency']) - 1] / (
-                                len(data['x_frequency']) * 2))
+                self.chart_dictionary[tracker.name]["ax"][1].plot(
+                    tracker.time_period,
+                    tracker.filtered_amplitude,
+                    color=(1.0, 0.0, 0.0),
+                    label='Dimension changes - filtered')
 
-                    self.chart_dictionary[data['name']]["ax"][2].bar(data['x_frequency'], data['y_frequency'],
+                if tracker.peaks_positive_amplitude is not None:
+                    self.chart_dictionary[tracker.name]["ax"][1].plot(
+                        tracker.time_period[tracker.peaks_positive_amplitude],
+                        tracker.filtered_amplitude[tracker.peaks_positive_amplitude],
+                        'ro', ms=3, label='Dimension - positive peaks',
+                        color=(0.0, 0.0, 1.0))
+
+                self.chart_dictionary[tracker.name]["ax"][1].legend(loc='best')
+
+                if tracker.fft_frequency is not None:
+                    chart_bar_width = (tracker.fft_frequency[len(tracker.fft_frequency) - 1] / (
+                                len(tracker.fft_frequency) * 2))
+
+                    self.chart_dictionary[tracker.name]["ax"][2].bar(tracker.fft_frequency, tracker.fft_amplitude,
                                                                 color=(1.0, 0.0, 0.0), width=chart_bar_width,
-                                                                label='harmonics, Filtered data')
-                    self.chart_dictionary[data['name']]["ax"][2].legend(loc='best')
+                                                                label='Harmonics, (filtered data)')
+                    self.chart_dictionary[tracker.name]["ax"][2].legend(loc='best')
 
             except IndexError:
-                print("charting error " + data['name'])
+                print("charting error " + tracker.name)
         else:
-            self.chart_dictionary[data['name']]["fig"].suptitle(data['name'] + " BPM - Not available"
+            self.chart_dictionary[tracker.name]["fig"].suptitle(tracker.name + " BPM - Not available"
                                                            , fontsize=14)
 
         plt.ion()
@@ -118,6 +129,18 @@ class HRCharts:
             self.chart_dictionary[data['name']]["fig"].suptitle("{} BPM(pk-pk) {}. BPM(fft) {}".format(
                 data['name'], bpm_pk, bpm_fft), fontsize=14)
 
+            if 'correlated_y1_amplitude' in data and data['correlated_y1_amplitude'] is not None:
+                self.chart_dictionary[data['name']]["ax"][0].plot(data['correlated_x_time'],
+                                                                  data['correlated_y1_amplitude'],
+                                                                  color=(0.0, 1.0, 0.0),
+                                                                  label = 'Y1 (filtered')
+
+            if 'correlated_y2_amplitude' in data and data['correlated_y2_amplitude'] is not None:
+                self.chart_dictionary[data['name']]["ax"][0].plot(data['correlated_x_time'],
+                                                                  data['correlated_y2_amplitude'],
+                                                                  color=(0.0, 1.0, 1.0),
+                                                                  label = 'Y2 (filtered')
+
             if 'correlated_amplitude' in data and data['correlated_amplitude'] is not None:
                 self.chart_dictionary[data['name']]["ax"][0].plot(data['correlated_x_time'],
                                                                   data['correlated_amplitude'],
@@ -148,33 +171,4 @@ class HRCharts:
         plt.ion()
         plt.pause(0.00001)
         plt.show()
-
-    # def initialize_fft_test_chart(self, test):
-    #     self.charts = {test: self.create_fft_chart(test)}
-
-    # @staticmethod
-    # def create_fft_chart(dimension):
-    #     fig, ax = plt.subplots(2, 1)
-    #     fig.suptitle(dimension + " Dimension " + dimension, fontsize=14)
-    #     ax[0].set_xlabel('Time')
-    #     ax[0].set_ylabel('Amplitude ' + dimension)
-    #
-    #     ax[1].set_xlabel('Pulse (BMP)')
-    #     ax[1].set_ylabel('|Y(BMP)| ' + dimension)
-    #     return {"fig": fig, "ax": ax}
-
-    # def update_fft_chart(self, data):
-    #     self.charts[data['name']]["ax"][0].clear()
-    #     self.charts[data['name']]["ax"][1].clear()
-    #     self.charts[data['name']]["fig"].suptitle("FFT for " + data['name'], fontsize=14)
-    #     self.charts[data['name']]["ax"][0].plot(data['x_time'], data['y_amplitude'])
-    #
-    #     chart_bar_width = (data['x_frequency'][len(data['x_frequency']) - 1] / (len(data['x_frequency']) * 2)) * 60
-    #
-    #     self.charts[data['name']]["ax"][1].bar(data['x_frequency']*60, data['y_frequency'],
-    #                                                 color=(1.0, 0.0, 0.0), width=chart_bar_width)
-    #     plt.ion()
-    #     plt.pause(0.00001)
-    #     plt.show()
-
 

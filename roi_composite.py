@@ -16,32 +16,35 @@ class ROIComposite():
         self.bpm_from_sum_of_ffts = None
         self.bpm_from_correlated_peaks = None
         self.correlated_peaks_positive = None
+        self.correlated_y1_amplitude = None
+        self.correlated_y2_amplitude = None
 
     def sum_ffts(self):
         """Calculate the composite FFT by arithmetically summing ffts """
         for tracker in self.tracker_list:
-            if tracker.fft_amplitude_series is not None:
+            if tracker.fft_amplitude is not None:
                 if self.sum_of_ffts_amplitude is None:
-                    self.sum_of_ffts_amplitude = np.copy(tracker.fft_amplitude_series)
-                    self.sum_of_ffts_frequency = tracker.fft_frequency_series
+                    self.sum_of_ffts_amplitude = np.copy(tracker.fft_amplitude)
+                    self.sum_of_ffts_frequency = tracker.fft_frequency
                 else:
-                    self.sum_of_ffts_amplitude = np.add(self.sum_of_ffts_amplitude, tracker.fft_amplitude_series)
+                    self.sum_of_ffts_amplitude = np.add(self.sum_of_ffts_amplitude, tracker.fft_amplitude)
 
     def correlate_and_add(self, fps, low_pulse_bpm, high_pulse_bpm):
         """For now, this assumes there are only two series..."""
         if len(self.tracker_list) == 2 and \
-                self.tracker_list[0].filtered_amplitude_series is not None and \
-                self.tracker_list[1].filtered_amplitude_series is not None and \
-                len(self.tracker_list[0].filtered_amplitude_series) == \
-                len(self.tracker_list[1].filtered_amplitude_series) :
-            y1 = self.tracker_list[0].filtered_amplitude_series
-            y2 = self.tracker_list[1].filtered_amplitude_series
+                self.tracker_list[0].filtered_amplitude is not None and \
+                self.tracker_list[1].filtered_amplitude is not None and \
+                len(self.tracker_list[0].filtered_amplitude) == \
+                len(self.tracker_list[1].filtered_amplitude) :
+            y1 = self.tracker_list[0].filtered_amplitude
+            y2 = self.tracker_list[1].filtered_amplitude
 
             # Normalised [0,1]
             y1_normalized = (y1 - np.min(y1)) / np.ptp(y1)
             y2_normalized = (y2 - np.min(y2)) / np.ptp(y2)
 
-            self.correlated_amplitude = correlate_and_sum(y1_normalized, y2_normalized)
+            self.correlated_y1_amplitude, self.correlated_y2_amplitude, self.correlated_amplitude = \
+                correlate_and_sum(y1_normalized, y2_normalized)
 
             sample_interval = 1.0 / fps
             video_length = len(self.correlated_amplitude) * sample_interval

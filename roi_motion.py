@@ -16,7 +16,7 @@ class ROIMotion(ROITracker):
         self.add_value(value)
 
     def process(self, fps, low_pulse_bpm, high_pulse_bpm):
-        self.create_time_series(fps)
+        self.create_time_period(fps)
 #        self.de_trend_series()
         self.time_filter(fps, low_pulse_bpm, high_pulse_bpm)
         self.calculate_positive_peaks()
