@@ -2,7 +2,9 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
-from correlate_and_sum import correlate_and_sum
+from utilities import correlate_and_sum
+
+
 class TestCorrelation(unittest.TestCase):
 
     def test_correlation(self):

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal
-from correlate_and_sum import correlate_and_sum
+from utilities import correlate_and_sum
 from fft_filter import FFTFilter
 
 class ROIComposite():
