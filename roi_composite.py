@@ -38,12 +38,8 @@ class ROIComposite():
                 self.tracker_list[1].filtered_amplitude is not None and \
                 len(self.tracker_list[0].filtered_amplitude) == \
                 len(self.tracker_list[1].filtered_amplitude) :
-            y1 = self.tracker_list[0].filtered_amplitude
-            y2 = self.tracker_list[1].filtered_amplitude
-
-            # Normalised [0,1]
-            y1_normalized = (y1 - np.min(y1)) / np.ptp(y1)
-            y2_normalized = (y2 - np.min(y2)) / np.ptp(y2)
+            y1_normalized = self.tracker_list[0].filtered_amplitude
+            y2_normalized = self.tracker_list[1].filtered_amplitude
 
             self.correlated_y1_amplitude, self.correlated_y2_amplitude, self.correlated_amplitude = \
                 correlate_and_sum(y1_normalized, y2_normalized)
@@ -57,7 +53,8 @@ class ROIComposite():
                 fft_filter.fft_filter2(self.correlated_amplitude, fps, low_pulse_bpm, high_pulse_bpm)
 
             # Calculate pk-pk
-            peaks_positive, _ = signal.find_peaks(self.correlated_amplitude, height=.2, threshold=None)
+            # since the data is normalize 0-2, set peak at 1.2 (The data is the sum of two 0-1 correlated signals)
+            peaks_positive, _ = signal.find_peaks(self.correlated_amplitude, height=1.2, threshold=None)
             if len(peaks_positive) > 1:
                 self.correlated_peaks_positive = peaks_positive;
 

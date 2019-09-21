@@ -1,6 +1,9 @@
 import numpy as np
 from numpy.fft import fft, ifft, fft2, fftshift
 
+def normalize_amplitude( data ):
+    normalized_data = (data - np.min(data)) / np.ptp(data)
+    return normalized_data
 
 def correlate_and_sum(y1, y2):
     """Correlate two signals and return the summed difference"""

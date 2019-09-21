@@ -2,7 +2,7 @@ import numpy as np
 from bandpass_filter import BandPassFilter
 from fft_filter import FFTFilter
 from scipy import signal
-
+from utilities import normalize_amplitude
 
 class ROITracker:
     """ROITracker maintains raw and processed data for the dimension of interest """
@@ -36,10 +36,12 @@ class ROITracker:
     def time_filter(self, fps, low_pulse_bpm, high_pulse_bpm):
         band_pass_filter = BandPassFilter()
         series = self.de_trended_amplitude if self.de_trended_amplitude is not None else self.raw_amplitude
-        self.filtered_amplitude = band_pass_filter.time_filter2(series, fps, low_pulse_bpm, high_pulse_bpm)
+        data = band_pass_filter.time_filter2(series, fps, low_pulse_bpm, high_pulse_bpm)
+        self.filtered_amplitude = normalize_amplitude(data)
 
     def calculate_positive_peaks(self):
-        peaks_positive, _ = signal.find_peaks(self.filtered_amplitude, height=.2, threshold=None)
+        #since the data is normalize 0-1, set peak at .6
+        peaks_positive, _ = signal.find_peaks(self.filtered_amplitude, height=.6, threshold=None)
         if len(peaks_positive) > 1:
             # time_intervals = np.average(np.diff(peaks_positive))
             # per_beat_in_seconds = time_intervals * x_time[1] - x_time[0]
