@@ -14,8 +14,9 @@ from roi_composite import ROIComposite
 from hr_charts import HRCharts
 from hr_csv import HRCsv
 
-SUMFTTComposite = "Sum-of-FFTs"
-CORELATEDSUM = "Correlated-Sum"
+SUM_FTT_COMPOSITE = "Sum-of-FFTs"
+CORRELATED_SUM = "Correlated-Sum"
+
 
 # noinspection PyUnresolvedReferences
 class FrameProcessor:
@@ -91,8 +92,8 @@ class FrameProcessor:
             for tracker in self.tracker_list:
                 self.hr_charts.add_chart(tracker.name)
 
-            self.hr_charts.add_chart(SUMFTTComposite, sub_charts = 2)
-            self.hr_charts.add_chart(CORELATEDSUM, sub_charts = 2)
+            self.hr_charts.add_chart(SUM_FTT_COMPOSITE, sub_charts = 2)
+            self.hr_charts.add_chart(CORRELATED_SUM, sub_charts = 2)
 
         while video.is_opened():
             ret, frame = video.read_frame()
@@ -155,18 +156,16 @@ class FrameProcessor:
     def __update_results(self, fps):
         """Process the the inter-fame changes, and filter results in both time and frequency domain """
         self.hr_estimate_count += 1
-        csv_header = "Pass count,"
-        csv_line = '{},'.format(self.hr_estimate_count)
+        result_summary ={
+            "passCount": self.hr_estimate_count,
+            "trackers": {}
+        }
 
         roi_composite = ROIComposite(self.tracker_list)
 
         composite_data_summ_fft = {
             "bpm_fft": None,
-            "name": SUMFTTComposite,
-        }
-        composite_data_correlated = {
-            "bpm_fft": None,
-            "name": CORELATEDSUM,
+            "name": SUM_FTT_COMPOSITE,
         }
 
         index = 1;
@@ -175,14 +174,15 @@ class FrameProcessor:
             tracker.calculate_bpm_from_peaks_positive()
             tracker.calculate_bpm_from_fft()
 
+            result_summary["trackers"].update({'{}Pk_Pk'.format(tracker.name): round(tracker.bpm_pk_pk, 2)})
+            result_summary["trackers"].update({'{}FFT'.format(tracker.name): round(tracker.bpm_fft, 2)})
+
             composite_data_summ_fft.update({'fft_frequency' + str(index) : tracker.fft_frequency} )
             composite_data_summ_fft.update({'fft_amplitude' + str(index): tracker.fft_amplitude})
             composite_data_summ_fft.update({'fft_name' + str(index): tracker.name})
 
-            index +=1
             self.hr_charts.update_chart(tracker)
-            csv_header = csv_header + "{} Pk-Pk, {} FFT,".format(tracker.name, tracker.name)
-            csv_line = csv_line + '{},{},'.format(round(tracker.bpm_pk_pk, 2), round(tracker.bpm_fft, 2))
+            index +=1
 
         roi_composite.sum_ffts()
         roi_composite.correlate_and_add(fps, self.config["low_pulse_bpm"], self.config["high_pulse_bpm"])
@@ -190,23 +190,39 @@ class FrameProcessor:
         roi_composite.calculate_bpm_from_peaks_positive()
         roi_composite.calculate_bpm_from_correlated_ffts()
 
-        csv_header = csv_header + "Sum of FFTs"
+        result_summary.update({"sumFFTs": self.__round(roi_composite.bpm_from_sum_of_ffts)})
+        result_summary.update({"correlatedPk_Pk": self.__round(roi_composite.bpm_from_correlated_peaks)})
+        result_summary.update({"correlatedFFTs": self.__round(roi_composite.bpm_from_correlated_ffts)})
 
         if roi_composite.bpm_from_sum_of_ffts is not None:
-            composite_data_summ_fft["bpm_fft"] = roi_composite.bpm_from_sum_of_ffts
+            # TODO - Strategy to determine the 'best' heart rate
             self.pulse_rate_bpm = roi_composite.bpm_from_sum_of_ffts
-            csv_line = csv_line + "{},".format(round(roi_composite.bpm_from_sum_of_ffts, 2))
         else:
-            csv_line = csv_line + "NA,"
             self.pulse_rate_bpm = "Not available"
 
         self.hr_charts.update_fft_composite_chart(roi_composite, composite_data_summ_fft)
-        self.hr_charts.update_correlated_composite_chart(roi_composite,composite_data_correlated)
+        self.hr_charts.update_correlated_composite_chart(CORRELATED_SUM, roi_composite)
 
-        csv_header = csv_header + "\n"
-        if self.hr_estimate_count == 1:
+        self.__result_summary_to_csv(result_summary)
+
+    def __round(self, value, precision = 2):
+        return None if value is None else round(value, precision)
+
+    def __result_summary_to_csv(self, results):
+        if results["passCount"] == 1:
+            # write the one time header
+            csv_header = "Pass count,"
+            for key in results["trackers"]:
+                csv_header = csv_header + "{},".format(key)
+            csv_header = csv_header + "Sum of FFTs, Correlated Pk-Pk, Correlated FFTs\n"
             self.hr_csv.write(csv_header)
-        csv_line = csv_line + "\n"
+
+        csv_line = '{},'.format(results["passCount"])
+        for value in results["trackers"].values():
+            csv_line = csv_line + "{},".format(self.__round(value))
+
+        csv_line = csv_line + "{}, {}, {}\n".format(
+            results["sumFFTs"], results["correlatedPk-Pk"], results["correlatedFFTs"])
         self.hr_csv.write(csv_line)
 
     def __create_trackers(self):

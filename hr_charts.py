@@ -124,59 +124,59 @@ class HRCharts:
         plt.pause(0.00001)
         plt.show()
 
-    def update_correlated_composite_chart(self, roi_composite, data):
+    def update_correlated_composite_chart(self, name, roi_composite):
         """Update FFT Composite charts"""
-        self.chart_dictionary[data['name']]["ax"][0].clear()
-        self.chart_dictionary[data['name']]["ax"][1].clear()
+        self.chart_dictionary[name]["ax"][0].clear()
+        self.chart_dictionary[name]["ax"][1].clear()
         try:
             bpm_pk_pk = "N/A" if roi_composite.bpm_from_correlated_peaks is None else \
                 str(round(roi_composite.bpm_from_correlated_peaks, 2))
             bpm_fft = "N/A" if roi_composite.bpm_from_correlated_ffts is None else \
                 str(round(roi_composite.bpm_from_correlated_ffts, 2))
 
-            self.chart_dictionary[data['name']]["fig"].suptitle("{} BPM(pk-pk) {}. BPM(fft) {}".format(
-                data['name'], bpm_pk_pk, bpm_fft), fontsize=14)
+            self.chart_dictionary[name]["fig"].suptitle("{} BPM(pk-pk) {}. BPM(fft) {}".format(
+                name, bpm_pk_pk, bpm_fft), fontsize=14)
 
             if roi_composite.correlated_y1_amplitude is not None:
-                self.chart_dictionary[data['name']]["ax"][0].plot(roi_composite.correlated_time_period,
-                                                                  roi_composite.correlated_y1_amplitude,
-                                                                  color=(0.0, 1.0, 0.0),
-                                                                  label = 'Y1 (filtered')
+                self.chart_dictionary[name]["ax"][0].plot(roi_composite.correlated_time_period,
+                                                          roi_composite.correlated_y1_amplitude,
+                                                          color=(0.0, 1.0, 0.0),
+                                                          label = 'Y1 (filtered')
 
             if roi_composite.correlated_y2_amplitude is not None:
-                self.chart_dictionary[data['name']]["ax"][0].plot(roi_composite.correlated_time_period,
-                                                                  roi_composite.correlated_y2_amplitude,
-                                                                  color=(0.0, 1.0, 1.0),
-                                                                  label = 'Y2 (filtered')
+                self.chart_dictionary[name]["ax"][0].plot(roi_composite.correlated_time_period,
+                                                          roi_composite.correlated_y2_amplitude,
+                                                          color=(0.0, 1.0, 1.0),
+                                                          label = 'Y2 (filtered')
 
             if roi_composite.correlated_amplitude is not None:
-                self.chart_dictionary[data['name']]["ax"][0].plot(roi_composite.correlated_time_period,
-                                                                  roi_composite.correlated_amplitude,
-                                                                  color=(1.0, 0.0, 0.0),
-                                                                  label = 'Sum of correlated series')
+                self.chart_dictionary[name]["ax"][0].plot(roi_composite.correlated_time_period,
+                                                          roi_composite.correlated_amplitude,
+                                                          color=(1.0, 0.0, 0.0),
+                                                          label = 'Sum of correlated series')
 
             if roi_composite.correlated_peaks_positive is not None:
-                self.chart_dictionary[data['name']]["ax"][0].plot(
+                self.chart_dictionary[name]["ax"][0].plot(
                     roi_composite.correlated_time_period[roi_composite.correlated_peaks_positive],
                     roi_composite.correlated_amplitude[roi_composite.correlated_peaks_positive],
                     'ro', ms=3, label='positive peaks',
                     color=(0.0, 0.0, 1.0))
 
-                self.chart_dictionary[data['name']]["ax"][0].legend(loc = 'best')
+                self.chart_dictionary[name]["ax"][0].legend(loc ='best')
 
             if roi_composite.correlated_fft_frequency is not None:
                 chart_bar_width = np.min(np.diff(roi_composite.correlated_fft_frequency)) / 2
 
-                self.chart_dictionary[data['name']]["ax"][1].bar(
+                self.chart_dictionary[name]["ax"][1].bar(
                     roi_composite.correlated_fft_frequency,
                     roi_composite.correlated_fft_amplitude,
                     color=(1.0, 0.0, 0.0), width=chart_bar_width,
                     label='Sum of correlated signals - harmonics')
 
-                self.chart_dictionary[data['name']]["ax"][1].legend(loc='best')
+                self.chart_dictionary[name]["ax"][1].legend(loc='best')
 
         except IndexError:
-            print("charting error " + data['name'])
+            print("charting error " + name)
 
         plt.ion()
         plt.pause(0.00001)
